@@ -51,10 +51,11 @@ museum <- museumData %>%
   # Replace _ with a space in Genus_species
   mutate(Genus_species = gsub("_", " ", Genus_species)) %>%
   # Remove specimens with NA in circularity
-  filter(!is.na(Circularity)) %>%
-  filter(Genus_species != "Narcine cf lingula",
+  filter(!is.na(Circularity),
+         Genus_species != "Narcine cf lingula",
          Circularity != "blank tiff",
-         Circularity != "No photo") %>%
+         Circularity != "No photo",
+         Circularity != "") %>%
   transmute(
     Genus_species,
     value = as.numeric(Circularity),
@@ -105,4 +106,3 @@ circularityPlot <-ggplot(combined, aes(x = value, y = Genus_species,
 ggsave("Results/Figures/Circularity.png", circularityPlot,
        height = 9, width = 5)
 ```
-
