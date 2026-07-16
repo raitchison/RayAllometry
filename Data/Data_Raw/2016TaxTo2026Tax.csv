@@ -1,0 +1,21 @@
+Order,Family,Genus,Species,CurrentGenusSpaceSpecies,Update,OldGenusSpaceSpecies
+Rhinopristiformes,Rhinidae,Rhynchobatus,cooki,Rhynchobatus cooki,Synonym,Rhynchobatus compagnoi
+Myliobatiformes,Myliobatidae,Myliobatis,californica,Myliobatis californica,Spelling,Myliobatis californicus
+Myliobatiformes,Dasyatidae,Hemitrygon,bennettii,Hemitrygon bennettii,Spelling,Hemitrygon bennetti
+Myliobatiformes,Myliobatidae,Myliobatis,peruviana,Myliobatis peruviana,Spelling,Myliobatis peruvianus
+Myliobatiformes,Myliobatidae,Myliobatis,tenuicaudata,Myliobatis tenuicaudata,Spelling,Myliobatis tenuicaudatus
+Myliobatiformes,Potamotrygonidae,Potamotrygon,schuemacheri,Potamotrygon schuhemacheri,Spelling,Potamotrygon schuhmacheri
+Rajiformes,Rajidae,Amblyraja,georgiana,Amblyraja georgiana,Spelling,Amblyraja geogiana
+Rajiformes,Arhynchobatidae,Arctoraja,parmifera,Arctoraja parmifera,GenusChange,Bathyraja parmifera
+Rajiformes,Arhynchobatidae,Bathyraja,panthera,Bathyraja panthera,Spelling,Bathyraja pathera
+Rajiformes,Arhynchobatidae,Arctoraja,simoterus,Arctoraja simoterus,GenusChange,Bathyraja simoterus
+Rajiformes,Rajidae,Caliraja,cortezensis,Caliraja cortezensis,GenusChange,Beringraja cortezensis
+Rajiformes,Rajidae,Caliraja,inornata,Caliraja inornata,GenusChange,Beringraja inornata
+Rajiformes,Rajidae,Caliraja,rhina,Caliraja rhina,GenusChange,Beringraja rhina
+Rajiformes,Rajidae,Caliraja,stellulata,Caliraja stellulata,GenusChange,Beringraja stellulata
+Rajiformes,Rajidae,Dentiraja,oculus,Dentiraja oculus,Spelling,Dentiraja oculata
+Rajiformes,Rajidae,Dipturus,macrocauda,Dipturus macrocauda,Spelling,Dipturus macrocaudus
+Rajiformes,Arhynchobatidae,Rioraja,agassizii,Rioraja agassizii,Spelling,Rioraja agassizi
+Rajiformes,Anacanthobatidae,Schroederobatis,americana,Schroederobatis americana,SpeciesMissing,Schroederobatis
+Rajiformes,Rajidae,Zearaja,argentinensis,Dipturus argentinensis,GenusChange,Zearaja argentinensis
+Torpediniformes,Torpedinidae,Torpedo,suessii,Torpedo suessii,Spelling,Torpedo suessi
