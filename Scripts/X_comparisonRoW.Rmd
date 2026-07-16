@@ -22,15 +22,37 @@ museumData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
 
 # Load Rays of the World data
 RoWdata <- read.csv("Data/Data_Tidy/RoW_Circularity.csv")
+
+# Load updated taxonomy csv
+taxonomy <- read.csv("Data/Data_Raw/2016TaxTo2026Tax.csv")
 ```
+
+Update the taxonomy from Rays of the World.
+
+```{r}
+RoWdata <- RoWdata %>%
+  mutate(Genus_species = gsub("_", " ", Genus_species)) %>%
+  left_join(
+    taxonomy,
+    by = c("Genus_species" = "OldGenusSpaceSpecies")
+  ) %>%
+  mutate(
+    Genus_species = coalesce(CurrentGenusSpaceSpecies, Genus_species)
+  ) %>%
+  select(Genus_species, Circularity)
+```
+
 
 ### Step 2:
 
 ```{r}
 # Turn museum data into long format
 museum <- museumData %>%
+  # Replace _ with a space in Genus_species
+  mutate(Genus_species = gsub("_", " ", Genus_species)) %>%
+  # Remove specimens with NA in circularity
   filter(!is.na(Circularity)) %>%
-  filter(Genus_species != "Narcine_cf_lingula",
+  filter(Genus_species != "Narcine cf lingula",
          Circularity != "blank tiff",
          Circularity != "No photo") %>%
   transmute(
