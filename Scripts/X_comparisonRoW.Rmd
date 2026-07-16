@@ -1,0 +1,86 @@
+---
+title: "X_comparisonRoW"
+output: html_document
+---
+
+## Purpose
+
+Compare RoW values with museum specimen values.
+
+```{r setup, load libraries}
+# Load tidyverse
+library(tidyverse)
+```
+
+### Step 1: Upload data csv files
+
+Museum data is located in "Data_Tidy".
+
+```{r upload}
+# Load museum data
+museumData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+
+# Load Rays of the World data
+RoWdata <- read.csv("Data/Data_Tidy/RoW_Circularity.csv")
+```
+
+### Step 2:
+
+```{r}
+# Turn museum data into long format
+museum <- museumData %>%
+  filter(!is.na(Circularity)) %>%
+  filter(Genus_species != "Narcine_cf_lingula",
+         Circularity != "blank tiff",
+         Circularity != "No photo") %>%
+  transmute(
+    Genus_species,
+    value = as.numeric(Circularity),
+    dataset = "Museum"
+  )
+
+# Turn RoW data into long format
+RoW <- RoWdata %>%
+    transmute(
+    Genus_species,
+    value = Circularity,
+    dataset = "RoW"
+  )
+
+# Combine
+overlap <- RoW %>%
+  semi_join(museum, by = "Genus_species")
+
+# Combine filtered datasets
+combined <- bind_rows(museum, overlap) %>%
+  mutate(Genus_species = gsub("_", " ", Genus_species))
+```
+
+### Step 3: Plot this mess
+
+```{r}
+circularityPlot <-ggplot(combined, aes(x = value, y = Genus_species,
+                                       shape = dataset, color = dataset)) +
+  geom_segment(aes(x = -Inf, xend = Inf,
+                   y = Genus_species, yend = Genus_species,
+                   color = "grey90"),
+               inherit.aes = FALSE, linewidth = 0.2) +
+  geom_point() +
+  scale_shape_manual(values = c(Museum = 16,
+                                      RoW = 17),
+                     name = "Dataset") +
+  scale_color_manual(values = c(Museum = "grey10",
+                                      RoW = "blue3"),
+                     name = "Dataset") + 
+  theme_classic() +
+  theme(axis.text.y = element_text(face = "italic")) +
+  labs(x = "Circularity",
+       y = NULL,
+       shape = NULL)
+```
+
+```{r}
+ggsave("Results/Figures/Circularity.png", circularityPlot,
+       height = 9, width = 5)
+```
+
