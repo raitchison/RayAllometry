@@ -24,9 +24,6 @@ Data from tpsDig is located in "Data_Raw".
 tpsData <- readland.tps("Data/Data_Raw/Outlines_RoW.TPS", 
                          specID = "imageID", 
                          readcurves = TRUE)
-
-# # Load other name file
-# fishsimple3 <- read.csv("Data_Raw/ShortSpecimenNames5.csv")
 ```
 
 ### Step 2: Mirror the left-side outline
