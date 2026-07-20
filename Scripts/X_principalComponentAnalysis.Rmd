@@ -2,4 +2,105 @@
 title: "X_principalComponentAnalysis"
 output: html_document
 ---
+# Load libraries
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Load vegan for Principal Component Analysis (PCA)
+library(vegan)
+```
+
+# Load data
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+```
+
+# Process data 
+
+```{r}
+# Tidy data
+raysClean <- rayData %>%
+  # Filter for adults
+  filter(Maturity == "Mature" |
+         Maturity == "Subadult") %>%
+  # Select columns to include in the PCA
+  select(Genus_species, Ecomorphotype, DiscWidth_CM, DiscLength_CM, LengthToApex_CM,
+         Circularity, SpiracleLength, GSavg) %>%
+  # Remove bad species
+  filter(Genus_species != "Narcine_cf_lingula") %>%
+  # Convert circularity to numeric
+  mutate(Circularity = as.numeric(Circularity)) %>%
+  # Remove individuals that have NAs
+  drop_na() %>%
+  # Tidy up Circularity column
+  filter(Circularity != "blank tiff",
+         Circularity != "No photo")
+```
+
+Take an average for each species to reduce the influence of an uneven number of specimens per species.
+
+```{r}
+# Create rayMeans dataframe
+rayMeans <- raysClean %>%
+  # Group by species
+  group_by(Genus_species) %>%
+  summarise(Mean_DiscWidth = mean(DiscWidth_CM, na.rm = TRUE),
+            Mean_DiscLength = mean(DiscLength_CM, na.rm = TRUE),
+            Mean_LengthToApex = mean(LengthToApex_CM, na.rm = TRUE),
+            Mean_SpiracleLength = mean(SpiracleLength, na.rm = TRUE),
+            Mean_GSavg = mean(GSavg, na.rm = TRUE),
+            Mean_Circularity = mean(Circularity, na.rm = TRUE),
+            # Retain Ecomorphotype data
+            Ecomorphotype = first(Ecomorphotype))
+```
+
+Create proportions.
+
+```{r}
+rayProportions <- rayMeans %>%
+  mutate(DiscRatio = Mean_DiscWidth/Mean_DiscLength,
+         LengthToApex_DL = Mean_LengthToApex/Mean_DiscLength,
+         SpiracleLength_DL = Mean_SpiracleLength/Mean_DiscLength,
+         GillSlitHeight_DL = Mean_GSavg/Mean_DiscLength) %>%
+  select(Genus_species, Ecomorphotype, DiscRatio, Mean_Circularity,
+         LengthToApex_DL, SpiracleLength_DL, GillSlitHeight_DL)
+```
+
+
+# Run a PCA
+
+```{r}
+# Extract numeric columns
+rayNumeric <- rayProportions[3:7]
+
+# Run PCA
+rayPCA <- rda(rayNumeric, scale = TRUE)
+```
+
+# Inspect results
+
+```{r}
+summary(rayPCA)
+```
+
+```{r}
+# Extract coordinates for the first two components
+pcaScores <- scores(rayPCA, choices = c(1, 2), display = "sites")
+
+# Bind to rayProportions
+rays <- cbind(rayProportions, pcaScores)
+```
+
+```{r}
+plotPCA <- ggplot(rays, aes(x = PC1, y = PC2,
+                            color = Ecomorphotype)) +
+  geom_point(size = 2, alpha = 0.8) +
+  theme_classic()
+
+plotPCA
+```
 
