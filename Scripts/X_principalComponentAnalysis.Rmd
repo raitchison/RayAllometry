@@ -30,8 +30,6 @@ raysClean <- rayData %>%
   # Select columns to include in the PCA
   select(Genus_species, Ecomorphotype, DiscWidth_CM, DiscLength_CM, LengthToApex_CM,
          Circularity, SpiracleLength, GSavg) %>%
-  # Remove bad species
-  filter(Genus_species != "Narcine_cf_lingula") %>%
   # Convert circularity to numeric
   mutate(Circularity = as.numeric(Circularity)) %>%
   # Remove individuals that have NAs
@@ -70,7 +68,6 @@ rayProportions <- rayMeans %>%
          LengthToApex_DL, SpiracleLength_DL, GillSlitHeight_DL)
 ```
 
-
 # Run a PCA
 
 ```{r}
@@ -98,9 +95,18 @@ rays <- cbind(rayProportions, pcaScores)
 ```{r}
 plotPCA <- ggplot(rays, aes(x = PC1, y = PC2,
                             color = Ecomorphotype)) +
-  geom_point(size = 2, alpha = 0.8) +
+  geom_point(size = 3, alpha = 0.8) +
+  labs(x = "PC1 (35.9% Variance Explained)",
+       y = "PC2 (36.2% Variance Explained)") +
+  theme(axis.title = element_text(size = 14)) +
   theme_classic()
 
 plotPCA
+```
+
+```{r}
+# Save figure
+ggsave("Results/Figures/PCA.png", plotPCA,
+       height = 9, width = 16)
 ```
 
