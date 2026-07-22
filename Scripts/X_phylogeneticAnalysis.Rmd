@@ -4,3 +4,274 @@ output: html_document
 date: "2026-07-13"
 ---
 
+## Purpose
+
+To resolve taxonomic differences between data files and phylogenetic trees.
+
+### Step 1: Load libraries
+
+Load the libraries used.
+
+```{r}
+# Load tidyverse for sanity
+library(tidyverse)
+
+# Load phytools, ape, and geiger for working with phylogenetic trees
+library(phytools)
+library(ape)
+library(geiger)
+```
+
+### Step 2: Load files
+
+Load:
+* Nex file 
+* Ray files
+
+```{r}
+# Read the tree file
+ogTrees <- read.nexus("Data/Data_Raw/PhylogeneticTrees/output.nex")
+
+# Use read.csv to load museum summary
+rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+
+# Load taxonomic crosswalk
+rayXwalk <- read.csv("Data/Data_Raw/TreeTaxonomicCrosswalk.csv")
+
+# Load species to remove from trees
+rayExclude <- read.csv("Data/Data_Raw/TreeSpeciesToExclude.csv")
+```
+
+View the current tip labels
+
+```{r}
+# Sample a single tree from prunedTrees
+sampleOGTree <- sample(ogTrees, 1)[[1]]
+
+# Get the tip labels
+tip_labels <- as.data.frame(sampleOGTree$tip.label)
+print(tip_labels)
+```
+
+### Step 3: Rename tree tips
+
+Resolve name changes in the phylogenetic trees.
+
+```{r}
+# Create a function to loop through trees and adopt changes from sharkXwalk
+rename_tips <- function(tree, corrections) {
+  # Create map of old names to new names
+  name_map <- deframe(corrections)
+
+  # Apply the mapping
+  new_labels <- ifelse(tree$tip.label %in% names(name_map),
+                       name_map[tree$tip.label],
+                       tree$tip.label)
+
+  tree$tip.label <- new_labels
+
+  # Identify duplicated names after renaming (i.e. synonyms)
+  dupes <- duplicated(tree$tip.label)
+
+  # If duplicates exist, drop ALL BUT one
+  if (any(dupes)) {
+    tree <- drop.tip(tree, tree$tip.label[dupes])
+  }
+
+  return(tree)
+}
+
+# Run trees through rename_tips function
+cleanTrees <- lapply(ogTrees, rename_tips, rayXwalk)
+# Make sure cleanTrees is a multiPhylo object
+class(cleanTrees) <- "multiPhylo"
+
+# Compare original tree tips and cleaned tree tips
+# Check original trees
+# Check if the *old* name is present in the old trees
+any(sapply(ogTrees, function(tree) {
+  "Himantura_fai" %in% tree$tip.label
+}))
+# Should return TRUE
+
+# Check if the *new* name is present in the old trees
+any(sapply(ogTrees, function(tree) {
+  "Pateobatis_fai" %in% tree$tip.label
+}))
+# Should return FALSE
+
+# Check cleaned trees
+# Check if the *new* name is present in the new trees
+any(sapply(cleanTrees, function(tree) {
+  "Pateobatis_fai" %in% tree$tip.label
+}))
+# Should return TRUE
+
+# Check if the *old* name is still in the new trees 
+any(sapply(cleanTrees, function(tree) {
+  "Himantura_fai" %in% tree$tip.label
+}))
+# Should return FALSE
+```
+
+### Step 4: Remove some species
+
+Some species need to be excluded for various reasons.
+See rayExclude for more informations.
+
+```{r}
+# Create vector of names to exclude
+excludeNames <- rayExclude$Genus_species
+
+# Remove species from trees
+prunedTrees <- lapply(cleanTrees, function(tree) {
+  drop.tip(tree, tip = intersect(tree$tip.label, excludeNames))
+})
+
+# Reassign class so it's recognized as a multiPhylo object
+class(prunedTrees) <- "multiPhylo"
+
+# Check if an excluded name is still in the trees
+any(sapply(prunedTrees, function(tree) {
+  "Myliobatis_rhombus" %in% tree$tip.label
+}))
+# Should return FALSE
+
+# Second check that an excluded name is still in the trees
+any(sapply(prunedTrees, function(tree) {
+  "Amblyraja_badia" %in% tree$tip.label
+}))
+# Should return FALSE
+```
+
+### Step 5: Add newly described species as a sister to the present genus
+
+We'll add new species within the genus without assuming a specific sister taxa.
+phytools offers a handy function, add.species.to.genus().
+However, this function only works on ultrametric trees
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Sample a single tree from prunedTrees
+sampleTree <- sample(prunedTrees, 1)[[1]]
+
+# Identify which species are in data but missing from tree
+# Extract tip labels from tree
+treeSpecies <- sampleTree$tip.label
+# Extract species from data
+dataSpecies <- rayData$Genus_species
+# Use setdiff to create a list of species that are missing
+missingSpecies <- setdiff(dataSpecies, treeSpecies)
+# View missingSpecies
+missingSpecies
+
+# Check whether the sampleTree is ultrametric or not
+is.ultrametric(sampleTree)
+# Should return FALSE
+
+# Assign branch lengths using the Grafen method
+sampleTree1 <- compute.brlen(sampleTree, method = "Grafen")
+
+# Check whether the new sampleTree1 is ultrametric or not
+is.ultrametric(sampleTree1)
+# Should return TRUE
+
+# For loop to add species from missingSpecies
+for (sp in missingSpecies) {
+  sampleTree1 <- add.species.to.genus(
+    tree = sampleTree1,
+    species = sp,
+    # Add new species to the root of the genus (does not assume sister taxa is known)
+    where = "root"
+  )
+}
+
+# Confirm all data species are now in the tree
+setdiff(dataSpecies, sampleTree1$tip.label)
+# Should return "character(0)"
+```
+
+There are a few genera that are not monophyletic. 
+add.species.to.genus() attaches new species to the most inclusive group.
+
+Now we can apply these changes to all the trees.
+
+```{r}
+augment_trees <- function(tree, missingSpecies) {
+  # Assign Grafen branch lengths
+  tree <- compute.brlen(tree, method = "Grafen")
+  # Add missing species
+  for (sp in missingSpecies) {
+    genus <- sub("_.*", "", sp)
+    tree <- add.species.to.genus(
+      tree    = tree,
+      species = sp,
+      where   = "root"
+    )
+  }
+  tree
+}
+
+# Apply to all trees
+augmentedTrees <- lapply(
+  prunedTrees,
+  augment_trees,
+  missingSpecies = missingSpecies
+)
+
+# Reassign class so augmentedTrees is recognized as a multiPhylo object
+class(augmentedTrees) <- "multiPhylo"
+```
+
+### Step 6: Sanity check trees are up to date and trim any remaining unused species
+
+```{r}
+# Set the seed for reproducibility
+set.seed(123)
+
+# Sample out a single tree
+sampleTreeA <- sample(augmentedTrees, 1)[[1]]
+
+# View which species are a mismatch between the tree and data
+diffNames <- name.check(sampleTreeA, rayData, rayData$Genus_species)
+# (should return a list of 440+ species in tree but not in data)
+
+# Keep only tips that are present in the data
+sampleTreeA <- drop.tip(sampleTreeA,
+                        setdiff(sampleTreeA$tip.label, rayData$Genus_species))
+
+# Check names again (should return "OK")
+diffNamesCheck <- name.check(sampleTreeA, rayData, rayData$Genus_species)
+
+# Apply dropped species to all trees
+augmentedTreesTrim <- lapply(augmentedTrees, function(tr) {
+  drop.tip(tr, setdiff(tr$tip.label, rayData$Genus_species))
+})
+
+# Reassign class so augmentedTreesTrim is recognized as a multiPhylo object
+class(augmentedTreesTrim) <- "multiPhylo"
+
+# Confirm all trees now match the data
+all(sapply(augmentedTreesTrim, function(tr) {
+  length(setdiff(rayData$Genus_species, tr$tip.label)) == 0
+}))
+# Should return TRUE
+
+# Sample out a single tree
+sampleTreeB <- sample(augmentedTreesTrim, 1)[[1]]
+
+# Double-check that names match
+diffNamesCheck2 <- name.check(sampleTreeB, rayData, rayData$Genus_species)
+```
+
+### Step 8: Save trimmed data file and trees
+
+```{r}
+# Use write.csv to save data frame as a csv in Data_Processed
+write.csv(rayData, "Data/Data_Processed/RayDataTrimmed.csv", row.names = FALSE)
+
+# Use write.nexus to save cleaned up trees to Data_Processed
+write.nexus(augmentedTreesTrim, file = "Data/Data_Processed/PrunedTrimmedTrees.nex")
+```

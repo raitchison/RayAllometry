@@ -1,0 +1,332 @@
+job_id: tree-pruner-074c1b30-da2e-4a60-8beb-ed1b03348bef
+email: rachel.aitchison7@gmail.com
+tree_base: sharktree
+tree_set: Chond_10Cal_full_trees
+sample_size: 500
+names: [Dasyatis acutirostra, Dasyatis akajei, Dasyatis americana, Dasyatis bennetti,
+  Dasyatis brevicaudata, Dasyatis centroura, Dasyatis chrysonota, Dasyatis colarensis,
+  Dasyatis dipterura, Dasyatis fluviorum, Dasyatis garouaensis, Dasyatis geijskesi,
+  Dasyatis gigantea, Dasyatis guttata, Dasyatis hastata, Dasyatis hypostigma, Dasyatis
+    izuensis, Dasyatis laevigata, Dasyatis laosensis, Dasyatis lata, Dasyatis longa,
+  Dasyatis margarita, Dasyatis margaritella, Dasyatis marianae, Dasyatis marmorata,
+  Dasyatis matsubarai, Dasyatis microps, Dasyatis multispinosa, Dasyatis navarrae,
+  Dasyatis parvonigra, Dasyatis pastinaca, Dasyatis rudis, Dasyatis sabina, Dasyatis
+    say, Dasyatis sinensis, Dasyatis thetidis, Dasyatis tortonesei, Dasyatis ushiei,
+  Dasyatis zugei, Himantura astra, Himantura dalyensis, Himantura fai, Himantura gerrardi,
+  Himantura granulata, Himantura hortlei, Himantura imbricata, Himantura jenkinsii,
+  Himantura kittipongi, Himantura leoparda, Himantura lobistoma, Himantura marginata,
+  Himantura oxyrhyncha, Himantura pacifica, Himantura pastinacoides, Himantura polylepis,
+  Himantura randalli, Himantura schmardae, Himantura signifer, Himantura toshi, Himantura
+    uarnacoides, Himantura uarnak, Himantura undulata, Himantura walga, Makararaja
+    chindwinensis, Neotrygon annotata, Neotrygon kuhlii, Neotrygon leylandi, Neotrygon
+    ningalooensis, Neotrygon picta, Pastinachus atrus, Pastinachus gracilicaudus,
+  Pastinachus sephen, Pastinachus solocirostris, Pastinachus stellurostris, Pteroplatytrygon
+    violacea, Taeniura lymma, Taeniurops grabata, Taeniurops meyeni, Urogymnus asperrimus,
+  Urogymnus ukpam, Gymnura afuerae, Gymnura altavela, Gymnura australis, Gymnura bimaculata,
+  Gymnura crebripunctata, Gymnura crooki, Gymnura hirundo, Gymnura japonica, Gymnura
+    marmorata, Gymnura micrura, Gymnura natalensis, Gymnura poecilura, Gymnura tentaculata,
+  Gymnura zonura, Hexatrygon bickelli, Manta alfredi, Manta birostris, Mobula diabolus,
+  Mobula eregoodootenkee, Mobula hypostoma, Mobula japanica, Mobula kuhlii, Mobula
+    mobular, Mobula munkiana, Mobula rochebrunei, Mobula tarapacana, Mobula thurstoni,
+  Aetobatus flagellum, Aetobatus narinari, Aetomylaeus maculatus, Aetomylaeus nichofii,
+  Aetomylaeus vespertilio, Myliobatis aquila, Myliobatis australis, Myliobatis californicus,
+  Myliobatis chilensis, Myliobatis freminvillei, Myliobatis goodei, Myliobatis hamlyni,
+  Myliobatis longirostris, Myliobatis peruvianus, Myliobatis rhombus, Myliobatis ridens,
+  Myliobatis tenuicaudatus, Myliobatis tobijei, Pteromylaeus asperrimus, Pteromylaeus
+    bovinus, Plesiobatis daviesi, Heliotrygon gomesi, Heliotrygon rosai, Paratrygon
+    aiereba, Plesiotrygon iwamae, Plesiotrygon nana, Potamotrygon boesemani, Potamotrygon
+    brachyura, Potamotrygon castexi, Potamotrygon constellata, Potamotrygon dumerilii,
+  Potamotrygon falkneri, Potamotrygon henlei, Potamotrygon histrix, Potamotrygon humerosa,
+  Potamotrygon leopoldi, Potamotrygon magdalenae, Potamotrygon marinae, Potamotrygon
+    motoro, Potamotrygon ocellata, Potamotrygon orbignyi, Potamotrygon schroederi,
+  Potamotrygon schuhmacheri, Potamotrygon scobina, Potamotrygon signata, Potamotrygon
+    tatianae, Potamotrygon tigrina, Potamotrygon yepezi, Rhinoptera adspersa, Rhinoptera
+    bonasus, Rhinoptera brasiliensis, Rhinoptera hainanensis, Rhinoptera javanica,
+  Rhinoptera jayakari, Rhinoptera marginata, Rhinoptera neglecta, Rhinoptera peli,
+  Rhinoptera sewelli, Rhinoptera steindachneri, Trygonoptera galba, Trygonoptera imitata,
+  Trygonoptera mucosa, Trygonoptera ovalis, Trygonoptera personata, Trygonoptera testacea,
+  Urolophus armatus, Urolophus aurantiacus, Urolophus bucculentus, Urolophus circularis,
+  Urolophus cruciatus, Urolophus deforgesi, Urolophus expansus, Urolophus flavomosaicus,
+  Urolophus gigas, Urolophus javanicus, Urolophus kaianus, Urolophus kapalensis, Urolophus
+    lobatus, Urolophus mitosis, Urolophus neocaledoniensis, Urolophus orarius, Urolophus
+    papilio, Urolophus paucimaculatus, Urolophus piperatus, Urolophus sufflavus, Urolophus
+    viridis, Urolophus westraliensis, Urobatis concentricus, Urobatis halleri, Urobatis
+    jamaicensis, Urobatis maculatus, Urobatis marmoratus, Urobatis tumbesensis, Urotrygon
+    aspidura, Urotrygon caudispinosus, Urotrygon chilensis, Urotrygon cimar, Urotrygon
+    microphthalmum, Urotrygon munda, Urotrygon nana, Urotrygon peruanus, Urotrygon
+    reticulata, Urotrygon rogersi, Urotrygon serrula, Urotrygon simulatrix, Urotrygon
+    venezuelae, Anacanthobatis americanus, Anacanthobatis donghaiensis, Anacanthobatis
+    folirostris, Anacanthobatis longirostris, Anacanthobatis marmoratus, Anacanthobatis
+    nanhaiensis, Anacanthobatis ori, Anacanthobatis stenosoma, Cruriraja andamanica,
+  Cruriraja atlantis, Cruriraja cadenati, Cruriraja durbanensis, Cruriraja hulleyi,
+  Cruriraja parcomaculata, Cruriraja poeyi, Cruriraja rugosa, Sinobatis borneensis,
+  Sinobatis bulbicauda, Sinobatis caerulea, Sinobatis filicauda, Sinobatis melanosoma,
+  Arhynchobatis asperrimus, Atlantoraja castelnaui, Atlantoraja cyclophora, Atlantoraja
+    platana, Bathyraja abyssicola, Bathyraja aguja, Bathyraja aleutica, Bathyraja
+    andriashevi, Bathyraja bergi, Bathyraja brachyurops, Bathyraja cousseauae, Bathyraja
+    diplotaenia, Bathyraja eatonii, Bathyraja fedorovi, Bathyraja griseocauda, Bathyraja
+    hesperafricana, Bathyraja irrasa, Bathyraja ishiharai, Bathyraja isotrachys, Bathyraja
+    kincaidii, Bathyraja leucomelanos, Bathyraja lindbergi, Bathyraja longicauda,
+  Bathyraja maccaini, Bathyraja maculata, Bathyraja mariposa, Bathyraja matsubarai,
+  Bathyraja meridionalis, Bathyraja microtrachys, Bathyraja minispinosa, Bathyraja
+    notoroensis, Bathyraja pallida, Bathyraja panthera, Bathyraja papilionifera, Bathyraja
+    parmifera, Bathyraja peruana, Bathyraja richardsoni, Bathyraja scaphiops, Bathyraja
+    schroederi, Bathyraja shuntovi, Bathyraja simoterus, Bathyraja smirnovi, Bathyraja
+    smithii, Bathyraja spinicauda, Bathyraja spinosissima, Bathyraja trachouros, Bathyraja
+    trachura, Bathyraja tunae, Bathyraja tzinovskii, Bathyraja violacea, Brochiraja
+    aenigma, Brochiraja albilabiata, Brochiraja asperula, Brochiraja heuresa, Brochiraja
+    leviveneta, Brochiraja microspinifera, Brochiraja spinifera, Brochiraja vittacauda,
+  Insentiraja laxipella, Insentiraja subtilispinosa, Irolita waitii, Irolita westraliensis,
+  Notoraja alisae, Notoraja azurea, Notoraja fijiensis, Notoraja hirticauda, Notoraja
+    inusitata, Notoraja lira, Notoraja longiventralis, Notoraja ochroderma, Notoraja
+    sapphira, Notoraja sticta, Notoraja tobitukai, Pavoraja alleni, Pavoraja arenaria,
+  Pavoraja mosaica, Pavoraja nitida, Pavoraja pseudonitida, Pavoraja umbrosa, Psammobatis
+    bergi, Psammobatis extenta, Psammobatis lentiginosa, Psammobatis normani, Psammobatis
+    parvacauda, Psammobatis rudis, Psammobatis rutrum, Psammobatis scobina, Pseudoraja
+    fischeri, Rhinoraja albomaculata, Rhinoraja kujiensis, Rhinoraja longicauda, Rhinoraja
+    macloviana, Rhinoraja magellanica, Rhinoraja multispinis, Rhinoraja murrayi, Rhinoraja
+    odai, Rhinoraja taranetzi, Rioraja agassizii, Sympterygia acuta, Sympterygia bonapartii,
+  Sympterygia brevicaudata, Sympterygia lima, Amblyraja badia, Amblyraja doellojuradoi,
+  Amblyraja frerichsi, Amblyraja georgiana, Amblyraja hyperborea, Amblyraja jenseni,
+  Amblyraja radiata, Amblyraja reversa, Amblyraja robertsi, Amblyraja taaf, Breviraja
+    claramaculata, Breviraja colesi, Breviraja nigriventralis, Breviraja spinosa,
+  Dactylobatus armatus, Dactylobatus clarkii, Dentiraja flindersi, Dentiraja lemprieri,
+  Dipturus acrobelus, Dipturus apricus, Dipturus australis, Dipturus batis, Dipturus
+    bullisi, Dipturus campbelli, Dipturus canutus, Dipturus cerva, Dipturus confusus,
+  Dipturus crosnieri, Dipturus doutrei, Dipturus ecuadoriensis, Dipturus endeavouri,
+  Dipturus falloargus, Dipturus flavirostris, Dipturus garricki, Dipturus gigas, Dipturus
+    grahami, Dipturus gudgeri, Dipturus healdi, Dipturus innominatus, Dipturus intermedia,
+  Dipturus johannisdavesi, Dipturus kwangtungensis, Dipturus laevis, Dipturus lanceorostratus,
+  Dipturus leptocaudus, Dipturus macrocauda, Dipturus melanospilus, Dipturus mennii,
+  Dipturus nidarosiensis, Dipturus oculus, Dipturus olseni, Dipturus oregoni, Dipturus
+    oxyrinchus, Dipturus polyommata, Dipturus pullopunctata, Dipturus queenslandicus,
+  Dipturus springeri, Dipturus stenorhynchus, Dipturus teevani, Dipturus tengu, Dipturus
+    trachydermus, Dipturus wengi, Dipturus wuhanlingi, Fenestraja atripinna, Fenestraja
+    cubensis, Fenestraja ishiyamai, Fenestraja maceachrani, Fenestraja mamillidens,
+  Fenestraja plutonia, Fenestraja sibogae, Fenestraja sinusmexicanus, Gurgesiella
+    atlantica, Gurgesiella dorsalifera, Gurgesiella furvescens, Hongeo koreana, Leucoraja
+    caribbaea, Leucoraja circularis, Leucoraja compagnoi, Leucoraja erinacea, Leucoraja
+    fullonica, Leucoraja garmani, Leucoraja lentiginosa, Leucoraja leucosticta, Leucoraja
+    melitensis, Leucoraja naevus, Leucoraja ocellata, Leucoraja pristispina, Leucoraja
+    virginica, Leucoraja wallacei, Leucoraja yucatanensis, Malacoraja kreffti, Malacoraja
+    obscura, Malacoraja senta, Malacoraja spinacidermis, Neoraja africana, Neoraja
+    caerulea, Neoraja carolinensis, Neoraja iberica, Neoraja stehmanni, Okamejei acutispina,
+  Okamejei arafurensis, Okamejei boesemani, Okamejei cairae, Okamejei heemstrai, Okamejei
+    hollandi, Okamejei jensenae, Okamejei kenojei, Okamejei leptoura, Okamejei meerdervoortii,
+  Okamejei mengae, Okamejei philipi, Okamejei pita, Okamejei porosa, Okamejei powelli,
+  Okamejei schmidti, Raja ackleyi, Raja africana, Raja asterias, Raja atriventralis,
+  Raja bahamensis, Beringraja binoculata, Raja brachyura, Raja cervigoni, Raja chinensis,
+  Raja clavata, Raja cortezensis, Raja eglanteria, Raja equatorialis, Raja herwigi,
+  Raja inornata, Raja macrorynchus, Raja maderensis, Raja microocellata, Raja miraletus,
+  Raja montagui, Raja polystigma, Beringraja pulchra, Raja radula, Raja rhina, Raja
+    rondeleti, Raja rouxi, Raja stellulata, Raja straeleni, Raja texana, Raja undulata,
+  Raja velezi, Rajella alia, Rajella annandalei, Rajella barnardi, Rajella bathyphila,
+  Rajella bigelowi, Rajella caudaspinosa, Rajella challengeri, Rajella dissimilis,
+  Rajella eisenhardti, Rajella fuliginea, Rajella fyllae, Rajella kukujevi, Rajella
+    leopardus, Rajella lintea, Rajella nigerrima, Rajella purpuriventralis, Rajella
+    ravidula, Rajella sadowskii, Rostroraja alba, Spiniraja whitleyi, Zearaja argentinensis,
+  Zearaja chilensis, Zearaja maugeana, Zearaja nasuta, Anoxypristis cuspidata, Pristis
+    clavata, Pristis pectinata, Pristis pristis, Pristis zijsron, Rhina ancylostoma,
+  Acroteriobatus annulatus, Acroteriobatus blochii, Acroteriobatus leucospilus, Acroteriobatus
+    ocellatus, Acroteriobatus salalah, Acroteriobatus variegatus, Acroteriobatus zanzibarensis,
+  Aptychotrema rostrata, Aptychotrema timorensis, Aptychotrema vincentiana, Glaucostegus
+    cemiculus, Glaucostegus granulatus, Glaucostegus halavi, Glaucostegus microphthalmus,
+  Glaucostegus obtusus, Glaucostegus spinosus, Glaucostegus thouin, Glaucostegus typus,
+  Rhinobatos albomaculatus, Rhinobatos annandalei, Rhinobatos formosensis, Rhinobatos
+    glaucostigma, Rhinobatos holcorhynchus, Rhinobatos horkelii, Rhinobatos hynnicephalus,
+  Rhinobatos irvinei, Rhinobatos jimbaranensis, Rhinobatos lentiginosus, Rhinobatos
+    leucorhynchus, Rhinobatos lionotus, Rhinobatos nudidorsalis, Rhinobatos penggali,
+  Rhinobatos percellens, Rhinobatos planiceps, Rhinobatos prahli, Rhinobatos productus,
+  Rhinobatos punctifer, Rhinobatos rhinobatos, Rhinobatos sainsburyi, Rhinobatos schlegelii,
+  Trygonorrhina dumerilii, Trygonorrhina fasciata, Trygonorrhina melaleuca, Zapteryx
+    brevirostris, Zapteryx exasperata, Zapteryx xyster, Rhynchobatus australiae, Rhynchobatus
+    djiddensis, Rhynchobatus laevis, Rhynchobatus luebberti, Rhynchobatus palpebratus,
+  Rhynchobatus springeri, Zanobatus schoenleinii, Hypnos monopterygius, Benthobatis
+    kreffti, Benthobatis marcida, Benthobatis moresbyi, Benthobatis yangi, Diplobatis
+    colombiensis, Diplobatis guamachensis, Diplobatis ommata, Diplobatis pictus, Discopyge
+    castelloi, Discopyge tschudii, Narcine atzi, Narcine bancroftii, Narcine bicolor,
+  Narcine brasiliensis, Narcine brevilabiata, Narcine brunnea, Narcine entemedor,
+  Narcine firma, Narcine insolita, Narcine lasti, Narcine leoparda, Narcine lingula,
+  Narcine maculata, Narcine nelsoni, Narcine nigra, Narcine oculifera, Narcine ornata,
+  Narcine prodorsalis, Narcine rierai, Narcine tasmaniensis, Narcine timlei, Narcine
+    vermiculatus, Narcine westraliensis, Crassinarke dormitor, Electrolux addisoni,
+  Heteronarce bentuviai, Heteronarce garmani, Heteronarce mollis, Heteronarce prabhui,
+  Narke capensis, Narke dipterygia, Narke japonica, Temera hardwickii, Typhlonarke
+    aysoni, Typhlonarke tarakea, Platyrhina hyugaensis, Platyrhina sinensis, Platyrhina
+    tangi, Platyrhinoidis triseriata, Torpedo adenensis, Torpedo alexandrinsis, Torpedo
+    andersoni, Torpedo bauchotae, Torpedo californica, Torpedo fairchildi, Torpedo
+    formosa, Torpedo fuscomaculata, Torpedo mackayana, Torpedo macneilli, Torpedo
+    marmorata, Torpedo microdiscus, Torpedo nobiliana, Torpedo panthera, Torpedo peruana,
+  Torpedo polleni, Torpedo puelcha, Torpedo semipelagica, Torpedo sinuspersici, Torpedo
+    suessii, Torpedo tokionis, Torpedo torpedo, Torpedo tremens, Torpedo zugmayeri]
+sample_trees: [Chond_10Cal_full_trees_4876.tre, Chond_10Cal_full_trees_9865.tre, Chond_10Cal_full_trees_3303.tre,
+  Chond_10Cal_full_trees_8469.tre, Chond_10Cal_full_trees_9239.tre, Chond_10Cal_full_trees_5783.tre,
+  Chond_10Cal_full_trees_6107.tre, Chond_10Cal_full_trees_7951.tre, Chond_10Cal_full_trees_3336.tre,
+  Chond_10Cal_full_trees_2769.tre, Chond_10Cal_full_trees_4597.tre, Chond_10Cal_full_trees_1956.tre,
+  Chond_10Cal_full_trees_2277.tre, Chond_10Cal_full_trees_3381.tre, Chond_10Cal_full_trees_3263.tre,
+  Chond_10Cal_full_trees_8690.tre, Chond_10Cal_full_trees_0413.tre, Chond_10Cal_full_trees_8306.tre,
+  Chond_10Cal_full_trees_6804.tre, Chond_10Cal_full_trees_3069.tre, Chond_10Cal_full_trees_4728.tre,
+  Chond_10Cal_full_trees_9733.tre, Chond_10Cal_full_trees_8993.tre, Chond_10Cal_full_trees_6438.tre,
+  Chond_10Cal_full_trees_3405.tre, Chond_10Cal_full_trees_3572.tre, Chond_10Cal_full_trees_6418.tre,
+  Chond_10Cal_full_trees_7393.tre, Chond_10Cal_full_trees_3222.tre, Chond_10Cal_full_trees_5244.tre,
+  Chond_10Cal_full_trees_7588.tre, Chond_10Cal_full_trees_4275.tre, Chond_10Cal_full_trees_1030.tre,
+  Chond_10Cal_full_trees_5108.tre, Chond_10Cal_full_trees_9792.tre, Chond_10Cal_full_trees_8869.tre,
+  Chond_10Cal_full_trees_9082.tre, Chond_10Cal_full_trees_7050.tre, Chond_10Cal_full_trees_3466.tre,
+  Chond_10Cal_full_trees_4079.tre, Chond_10Cal_full_trees_8378.tre, Chond_10Cal_full_trees_0541.tre,
+  Chond_10Cal_full_trees_1116.tre, Chond_10Cal_full_trees_1130.tre, Chond_10Cal_full_trees_6317.tre,
+  Chond_10Cal_full_trees_7518.tre, Chond_10Cal_full_trees_4800.tre, Chond_10Cal_full_trees_2364.tre,
+  Chond_10Cal_full_trees_9129.tre, Chond_10Cal_full_trees_9132.tre, Chond_10Cal_full_trees_4260.tre,
+  Chond_10Cal_full_trees_1691.tre, Chond_10Cal_full_trees_2477.tre, Chond_10Cal_full_trees_9983.tre,
+  Chond_10Cal_full_trees_3323.tre, Chond_10Cal_full_trees_0184.tre, Chond_10Cal_full_trees_0075.tre,
+  Chond_10Cal_full_trees_2989.tre, Chond_10Cal_full_trees_7707.tre, Chond_10Cal_full_trees_1301.tre,
+  Chond_10Cal_full_trees_3832.tre, Chond_10Cal_full_trees_6281.tre, Chond_10Cal_full_trees_4270.tre,
+  Chond_10Cal_full_trees_2321.tre, Chond_10Cal_full_trees_8813.tre, Chond_10Cal_full_trees_0312.tre,
+  Chond_10Cal_full_trees_8701.tre, Chond_10Cal_full_trees_3884.tre, Chond_10Cal_full_trees_7432.tre,
+  Chond_10Cal_full_trees_7804.tre, Chond_10Cal_full_trees_6685.tre, Chond_10Cal_full_trees_5602.tre,
+  Chond_10Cal_full_trees_9695.tre, Chond_10Cal_full_trees_7700.tre, Chond_10Cal_full_trees_1026.tre,
+  Chond_10Cal_full_trees_1446.tre, Chond_10Cal_full_trees_2421.tre, Chond_10Cal_full_trees_5040.tre,
+  Chond_10Cal_full_trees_5342.tre, Chond_10Cal_full_trees_1063.tre, Chond_10Cal_full_trees_9512.tre,
+  Chond_10Cal_full_trees_3256.tre, Chond_10Cal_full_trees_0626.tre, Chond_10Cal_full_trees_6509.tre,
+  Chond_10Cal_full_trees_5477.tre, Chond_10Cal_full_trees_7488.tre, Chond_10Cal_full_trees_7314.tre,
+  Chond_10Cal_full_trees_8263.tre, Chond_10Cal_full_trees_7556.tre, Chond_10Cal_full_trees_9192.tre,
+  Chond_10Cal_full_trees_6993.tre, Chond_10Cal_full_trees_6075.tre, Chond_10Cal_full_trees_9341.tre,
+  Chond_10Cal_full_trees_0493.tre, Chond_10Cal_full_trees_2122.tre, Chond_10Cal_full_trees_9185.tre,
+  Chond_10Cal_full_trees_1959.tre, Chond_10Cal_full_trees_4957.tre, Chond_10Cal_full_trees_9467.tre,
+  Chond_10Cal_full_trees_9250.tre, Chond_10Cal_full_trees_9449.tre, Chond_10Cal_full_trees_0831.tre,
+  Chond_10Cal_full_trees_7271.tre, Chond_10Cal_full_trees_4980.tre, Chond_10Cal_full_trees_8044.tre,
+  Chond_10Cal_full_trees_2745.tre, Chond_10Cal_full_trees_8267.tre, Chond_10Cal_full_trees_2068.tre,
+  Chond_10Cal_full_trees_0612.tre, Chond_10Cal_full_trees_4722.tre, Chond_10Cal_full_trees_8870.tre,
+  Chond_10Cal_full_trees_6555.tre, Chond_10Cal_full_trees_9817.tre, Chond_10Cal_full_trees_7173.tre,
+  Chond_10Cal_full_trees_0796.tre, Chond_10Cal_full_trees_9247.tre, Chond_10Cal_full_trees_7017.tre,
+  Chond_10Cal_full_trees_1403.tre, Chond_10Cal_full_trees_7434.tre, Chond_10Cal_full_trees_8114.tre,
+  Chond_10Cal_full_trees_2416.tre, Chond_10Cal_full_trees_2741.tre, Chond_10Cal_full_trees_8147.tre,
+  Chond_10Cal_full_trees_0899.tre, Chond_10Cal_full_trees_9564.tre, Chond_10Cal_full_trees_3486.tre,
+  Chond_10Cal_full_trees_0018.tre, Chond_10Cal_full_trees_1419.tre, Chond_10Cal_full_trees_4608.tre,
+  Chond_10Cal_full_trees_1237.tre, Chond_10Cal_full_trees_9203.tre, Chond_10Cal_full_trees_7706.tre,
+  Chond_10Cal_full_trees_0533.tre, Chond_10Cal_full_trees_1645.tre, Chond_10Cal_full_trees_6002.tre,
+  Chond_10Cal_full_trees_1181.tre, Chond_10Cal_full_trees_5338.tre, Chond_10Cal_full_trees_0662.tre,
+  Chond_10Cal_full_trees_5812.tre, Chond_10Cal_full_trees_0800.tre, Chond_10Cal_full_trees_0646.tre,
+  Chond_10Cal_full_trees_3934.tre, Chond_10Cal_full_trees_2374.tre, Chond_10Cal_full_trees_7479.tre,
+  Chond_10Cal_full_trees_4320.tre, Chond_10Cal_full_trees_9919.tre, Chond_10Cal_full_trees_8219.tre,
+  Chond_10Cal_full_trees_8115.tre, Chond_10Cal_full_trees_9697.tre, Chond_10Cal_full_trees_6264.tre,
+  Chond_10Cal_full_trees_9757.tre, Chond_10Cal_full_trees_2392.tre, Chond_10Cal_full_trees_3726.tre,
+  Chond_10Cal_full_trees_6333.tre, Chond_10Cal_full_trees_5295.tre, Chond_10Cal_full_trees_2728.tre,
+  Chond_10Cal_full_trees_9993.tre, Chond_10Cal_full_trees_1040.tre, Chond_10Cal_full_trees_4380.tre,
+  Chond_10Cal_full_trees_2503.tre, Chond_10Cal_full_trees_5102.tre, Chond_10Cal_full_trees_2917.tre,
+  Chond_10Cal_full_trees_0285.tre, Chond_10Cal_full_trees_8456.tre, Chond_10Cal_full_trees_7237.tre,
+  Chond_10Cal_full_trees_8922.tre, Chond_10Cal_full_trees_6293.tre, Chond_10Cal_full_trees_6823.tre,
+  Chond_10Cal_full_trees_5790.tre, Chond_10Cal_full_trees_8499.tre, Chond_10Cal_full_trees_6294.tre,
+  Chond_10Cal_full_trees_0195.tre, Chond_10Cal_full_trees_4066.tre, Chond_10Cal_full_trees_2223.tre,
+  Chond_10Cal_full_trees_4416.tre, Chond_10Cal_full_trees_8712.tre, Chond_10Cal_full_trees_4455.tre,
+  Chond_10Cal_full_trees_4234.tre, Chond_10Cal_full_trees_0892.tre, Chond_10Cal_full_trees_0488.tre,
+  Chond_10Cal_full_trees_0603.tre, Chond_10Cal_full_trees_4681.tre, Chond_10Cal_full_trees_4343.tre,
+  Chond_10Cal_full_trees_4399.tre, Chond_10Cal_full_trees_4836.tre, Chond_10Cal_full_trees_8943.tre,
+  Chond_10Cal_full_trees_3820.tre, Chond_10Cal_full_trees_4496.tre, Chond_10Cal_full_trees_3965.tre,
+  Chond_10Cal_full_trees_1907.tre, Chond_10Cal_full_trees_0705.tre, Chond_10Cal_full_trees_4842.tre,
+  Chond_10Cal_full_trees_1723.tre, Chond_10Cal_full_trees_7688.tre, Chond_10Cal_full_trees_1964.tre,
+  Chond_10Cal_full_trees_2373.tre, Chond_10Cal_full_trees_9041.tre, Chond_10Cal_full_trees_4570.tre,
+  Chond_10Cal_full_trees_6382.tre, Chond_10Cal_full_trees_8444.tre, Chond_10Cal_full_trees_5942.tre,
+  Chond_10Cal_full_trees_2041.tre, Chond_10Cal_full_trees_1912.tre, Chond_10Cal_full_trees_9866.tre,
+  Chond_10Cal_full_trees_8700.tre, Chond_10Cal_full_trees_3514.tre, Chond_10Cal_full_trees_2104.tre,
+  Chond_10Cal_full_trees_9981.tre, Chond_10Cal_full_trees_4067.tre, Chond_10Cal_full_trees_1639.tre,
+  Chond_10Cal_full_trees_0382.tre, Chond_10Cal_full_trees_7336.tre, Chond_10Cal_full_trees_2705.tre,
+  Chond_10Cal_full_trees_8177.tre, Chond_10Cal_full_trees_9561.tre, Chond_10Cal_full_trees_5186.tre,
+  Chond_10Cal_full_trees_3733.tre, Chond_10Cal_full_trees_1021.tre, Chond_10Cal_full_trees_6335.tre,
+  Chond_10Cal_full_trees_0965.tre, Chond_10Cal_full_trees_3359.tre, Chond_10Cal_full_trees_6532.tre,
+  Chond_10Cal_full_trees_1235.tre, Chond_10Cal_full_trees_0347.tre, Chond_10Cal_full_trees_8622.tre,
+  Chond_10Cal_full_trees_4215.tre, Chond_10Cal_full_trees_4457.tre, Chond_10Cal_full_trees_2687.tre,
+  Chond_10Cal_full_trees_0406.tre, Chond_10Cal_full_trees_8898.tre, Chond_10Cal_full_trees_5566.tre,
+  Chond_10Cal_full_trees_2216.tre, Chond_10Cal_full_trees_5684.tre, Chond_10Cal_full_trees_8373.tre,
+  Chond_10Cal_full_trees_5982.tre, Chond_10Cal_full_trees_4344.tre, Chond_10Cal_full_trees_5662.tre,
+  Chond_10Cal_full_trees_9105.tre, Chond_10Cal_full_trees_9222.tre, Chond_10Cal_full_trees_3173.tre,
+  Chond_10Cal_full_trees_2200.tre, Chond_10Cal_full_trees_4144.tre, Chond_10Cal_full_trees_9373.tre,
+  Chond_10Cal_full_trees_8144.tre, Chond_10Cal_full_trees_5580.tre, Chond_10Cal_full_trees_4353.tre,
+  Chond_10Cal_full_trees_8145.tre, Chond_10Cal_full_trees_8297.tre, Chond_10Cal_full_trees_7634.tre,
+  Chond_10Cal_full_trees_6209.tre, Chond_10Cal_full_trees_3627.tre, Chond_10Cal_full_trees_6616.tre,
+  Chond_10Cal_full_trees_1629.tre, Chond_10Cal_full_trees_7515.tre, Chond_10Cal_full_trees_4028.tre,
+  Chond_10Cal_full_trees_4055.tre, Chond_10Cal_full_trees_5168.tre, Chond_10Cal_full_trees_5814.tre,
+  Chond_10Cal_full_trees_8470.tre, Chond_10Cal_full_trees_4778.tre, Chond_10Cal_full_trees_6028.tre,
+  Chond_10Cal_full_trees_0511.tre, Chond_10Cal_full_trees_4951.tre, Chond_10Cal_full_trees_1828.tre,
+  Chond_10Cal_full_trees_6636.tre, Chond_10Cal_full_trees_6851.tre, Chond_10Cal_full_trees_7182.tre,
+  Chond_10Cal_full_trees_0563.tre, Chond_10Cal_full_trees_2209.tre, Chond_10Cal_full_trees_9906.tre,
+  Chond_10Cal_full_trees_2566.tre, Chond_10Cal_full_trees_5985.tre, Chond_10Cal_full_trees_5128.tre,
+  Chond_10Cal_full_trees_4004.tre, Chond_10Cal_full_trees_2702.tre, Chond_10Cal_full_trees_6346.tre,
+  Chond_10Cal_full_trees_2798.tre, Chond_10Cal_full_trees_9442.tre, Chond_10Cal_full_trees_8027.tre,
+  Chond_10Cal_full_trees_6840.tre, Chond_10Cal_full_trees_7828.tre, Chond_10Cal_full_trees_8643.tre,
+  Chond_10Cal_full_trees_6017.tre, Chond_10Cal_full_trees_7119.tre, Chond_10Cal_full_trees_7878.tre,
+  Chond_10Cal_full_trees_5449.tre, Chond_10Cal_full_trees_2973.tre, Chond_10Cal_full_trees_5172.tre,
+  Chond_10Cal_full_trees_2596.tre, Chond_10Cal_full_trees_3974.tre, Chond_10Cal_full_trees_4249.tre,
+  Chond_10Cal_full_trees_8942.tre, Chond_10Cal_full_trees_2644.tre, Chond_10Cal_full_trees_4780.tre,
+  Chond_10Cal_full_trees_5892.tre, Chond_10Cal_full_trees_7601.tre, Chond_10Cal_full_trees_0671.tre,
+  Chond_10Cal_full_trees_1967.tre, Chond_10Cal_full_trees_8272.tre, Chond_10Cal_full_trees_3170.tre,
+  Chond_10Cal_full_trees_7059.tre, Chond_10Cal_full_trees_8980.tre, Chond_10Cal_full_trees_7669.tre,
+  Chond_10Cal_full_trees_3557.tre, Chond_10Cal_full_trees_3286.tre, Chond_10Cal_full_trees_4829.tre,
+  Chond_10Cal_full_trees_1868.tre, Chond_10Cal_full_trees_4185.tre, Chond_10Cal_full_trees_2859.tre,
+  Chond_10Cal_full_trees_9462.tre, Chond_10Cal_full_trees_1321.tre, Chond_10Cal_full_trees_6872.tre,
+  Chond_10Cal_full_trees_1323.tre, Chond_10Cal_full_trees_1007.tre, Chond_10Cal_full_trees_3504.tre,
+  Chond_10Cal_full_trees_1104.tre, Chond_10Cal_full_trees_0166.tre, Chond_10Cal_full_trees_9752.tre,
+  Chond_10Cal_full_trees_0024.tre, Chond_10Cal_full_trees_5096.tre, Chond_10Cal_full_trees_4577.tre,
+  Chond_10Cal_full_trees_3592.tre, Chond_10Cal_full_trees_5628.tre, Chond_10Cal_full_trees_1552.tre,
+  Chond_10Cal_full_trees_3686.tre, Chond_10Cal_full_trees_3413.tre, Chond_10Cal_full_trees_0876.tre,
+  Chond_10Cal_full_trees_0621.tre, Chond_10Cal_full_trees_7830.tre, Chond_10Cal_full_trees_3765.tre,
+  Chond_10Cal_full_trees_5873.tre, Chond_10Cal_full_trees_0143.tre, Chond_10Cal_full_trees_1749.tre,
+  Chond_10Cal_full_trees_9087.tre, Chond_10Cal_full_trees_5950.tre, Chond_10Cal_full_trees_6672.tre,
+  Chond_10Cal_full_trees_4540.tre, Chond_10Cal_full_trees_4515.tre, Chond_10Cal_full_trees_9511.tre,
+  Chond_10Cal_full_trees_4695.tre, Chond_10Cal_full_trees_2689.tre, Chond_10Cal_full_trees_6857.tre,
+  Chond_10Cal_full_trees_5014.tre, Chond_10Cal_full_trees_7224.tre, Chond_10Cal_full_trees_8888.tre,
+  Chond_10Cal_full_trees_6988.tre, Chond_10Cal_full_trees_8354.tre, Chond_10Cal_full_trees_1869.tre,
+  Chond_10Cal_full_trees_8786.tre, Chond_10Cal_full_trees_1789.tre, Chond_10Cal_full_trees_7844.tre,
+  Chond_10Cal_full_trees_5659.tre, Chond_10Cal_full_trees_8197.tre, Chond_10Cal_full_trees_2619.tre,
+  Chond_10Cal_full_trees_5316.tre, Chond_10Cal_full_trees_9162.tre, Chond_10Cal_full_trees_4334.tre,
+  Chond_10Cal_full_trees_1175.tre, Chond_10Cal_full_trees_1066.tre, Chond_10Cal_full_trees_7273.tre,
+  Chond_10Cal_full_trees_4609.tre, Chond_10Cal_full_trees_6219.tre, Chond_10Cal_full_trees_0953.tre,
+  Chond_10Cal_full_trees_8716.tre, Chond_10Cal_full_trees_4821.tre, Chond_10Cal_full_trees_9628.tre,
+  Chond_10Cal_full_trees_6455.tre, Chond_10Cal_full_trees_3672.tre, Chond_10Cal_full_trees_8192.tre,
+  Chond_10Cal_full_trees_8832.tre, Chond_10Cal_full_trees_8840.tre, Chond_10Cal_full_trees_1075.tre,
+  Chond_10Cal_full_trees_3490.tre, Chond_10Cal_full_trees_5225.tre, Chond_10Cal_full_trees_3721.tre,
+  Chond_10Cal_full_trees_3916.tre, Chond_10Cal_full_trees_6286.tre, Chond_10Cal_full_trees_7045.tre,
+  Chond_10Cal_full_trees_6618.tre, Chond_10Cal_full_trees_6910.tre, Chond_10Cal_full_trees_3043.tre,
+  Chond_10Cal_full_trees_2866.tre, Chond_10Cal_full_trees_5543.tre, Chond_10Cal_full_trees_0778.tre,
+  Chond_10Cal_full_trees_8193.tre, Chond_10Cal_full_trees_4673.tre, Chond_10Cal_full_trees_9313.tre,
+  Chond_10Cal_full_trees_0614.tre, Chond_10Cal_full_trees_3652.tre, Chond_10Cal_full_trees_7559.tre,
+  Chond_10Cal_full_trees_5179.tre, Chond_10Cal_full_trees_9167.tre, Chond_10Cal_full_trees_1442.tre,
+  Chond_10Cal_full_trees_6033.tre, Chond_10Cal_full_trees_2743.tre, Chond_10Cal_full_trees_5206.tre,
+  Chond_10Cal_full_trees_9378.tre, Chond_10Cal_full_trees_3517.tre, Chond_10Cal_full_trees_4582.tre,
+  Chond_10Cal_full_trees_8157.tre, Chond_10Cal_full_trees_7404.tre, Chond_10Cal_full_trees_7004.tre,
+  Chond_10Cal_full_trees_9523.tre, Chond_10Cal_full_trees_7282.tre, Chond_10Cal_full_trees_3063.tre,
+  Chond_10Cal_full_trees_9413.tre, Chond_10Cal_full_trees_7252.tre, Chond_10Cal_full_trees_9406.tre,
+  Chond_10Cal_full_trees_3590.tre, Chond_10Cal_full_trees_4519.tre, Chond_10Cal_full_trees_4052.tre,
+  Chond_10Cal_full_trees_7832.tre, Chond_10Cal_full_trees_4543.tre, Chond_10Cal_full_trees_1223.tre,
+  Chond_10Cal_full_trees_2667.tre, Chond_10Cal_full_trees_6522.tre, Chond_10Cal_full_trees_6584.tre,
+  Chond_10Cal_full_trees_3103.tre, Chond_10Cal_full_trees_2679.tre, Chond_10Cal_full_trees_3919.tre,
+  Chond_10Cal_full_trees_1115.tre, Chond_10Cal_full_trees_2886.tre, Chond_10Cal_full_trees_1537.tre,
+  Chond_10Cal_full_trees_6791.tre, Chond_10Cal_full_trees_6016.tre, Chond_10Cal_full_trees_6972.tre,
+  Chond_10Cal_full_trees_2852.tre, Chond_10Cal_full_trees_9879.tre, Chond_10Cal_full_trees_3495.tre,
+  Chond_10Cal_full_trees_2388.tre, Chond_10Cal_full_trees_2057.tre, Chond_10Cal_full_trees_7362.tre,
+  Chond_10Cal_full_trees_0180.tre, Chond_10Cal_full_trees_2607.tre, Chond_10Cal_full_trees_2765.tre,
+  Chond_10Cal_full_trees_4349.tre, Chond_10Cal_full_trees_5526.tre, Chond_10Cal_full_trees_7150.tre,
+  Chond_10Cal_full_trees_3659.tre, Chond_10Cal_full_trees_2676.tre, Chond_10Cal_full_trees_4089.tre,
+  Chond_10Cal_full_trees_9037.tre, Chond_10Cal_full_trees_6296.tre, Chond_10Cal_full_trees_9383.tre,
+  Chond_10Cal_full_trees_4706.tre, Chond_10Cal_full_trees_6104.tre, Chond_10Cal_full_trees_2456.tre,
+  Chond_10Cal_full_trees_9722.tre, Chond_10Cal_full_trees_1810.tre, Chond_10Cal_full_trees_3959.tre,
+  Chond_10Cal_full_trees_1824.tre, Chond_10Cal_full_trees_3071.tre, Chond_10Cal_full_trees_8655.tre,
+  Chond_10Cal_full_trees_3415.tre, Chond_10Cal_full_trees_9427.tre, Chond_10Cal_full_trees_3214.tre,
+  Chond_10Cal_full_trees_9348.tre, Chond_10Cal_full_trees_2306.tre, Chond_10Cal_full_trees_6996.tre,
+  Chond_10Cal_full_trees_4051.tre, Chond_10Cal_full_trees_3024.tre, Chond_10Cal_full_trees_9627.tre,
+  Chond_10Cal_full_trees_5778.tre, Chond_10Cal_full_trees_7242.tre, Chond_10Cal_full_trees_3055.tre,
+  Chond_10Cal_full_trees_8630.tre, Chond_10Cal_full_trees_1637.tre, Chond_10Cal_full_trees_5140.tre,
+  Chond_10Cal_full_trees_3827.tre, Chond_10Cal_full_trees_2918.tre, Chond_10Cal_full_trees_3457.tre,
+  Chond_10Cal_full_trees_2971.tre, Chond_10Cal_full_trees_5133.tre, Chond_10Cal_full_trees_9566.tre,
+  Chond_10Cal_full_trees_6349.tre, Chond_10Cal_full_trees_4691.tre, Chond_10Cal_full_trees_4479.tre,
+  Chond_10Cal_full_trees_7921.tre, Chond_10Cal_full_trees_6120.tre, Chond_10Cal_full_trees_5810.tre,
+  Chond_10Cal_full_trees_6111.tre, Chond_10Cal_full_trees_8765.tre, Chond_10Cal_full_trees_1354.tre,
+  Chond_10Cal_full_trees_0484.tre, Chond_10Cal_full_trees_8982.tre, Chond_10Cal_full_trees_0567.tre,
+  Chond_10Cal_full_trees_3073.tre, Chond_10Cal_full_trees_4072.tre, Chond_10Cal_full_trees_4894.tre,
+  Chond_10Cal_full_trees_0310.tre, Chond_10Cal_full_trees_6330.tre, Chond_10Cal_full_trees_1739.tre,
+  Chond_10Cal_full_trees_9220.tre, Chond_10Cal_full_trees_6151.tre, Chond_10Cal_full_trees_8030.tre,
+  Chond_10Cal_full_trees_5227.tre, Chond_10Cal_full_trees_4872.tre, Chond_10Cal_full_trees_9734.tre,
+  Chond_10Cal_full_trees_1802.tre, Chond_10Cal_full_trees_6441.tre]
+status: CREATED
+created_at: "2026-03-09T17:14:16Z"
+completed_at: ""
+bad_names: {}
