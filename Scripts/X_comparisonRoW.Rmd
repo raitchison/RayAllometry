@@ -52,7 +52,6 @@ museum <- museumData %>%
   mutate(Genus_species = gsub("_", " ", Genus_species)) %>%
   # Remove specimens with NA in circularity
   filter(!is.na(Circularity),
-         Genus_species != "Narcine cf lingula",
          Circularity != "blank tiff",
          Circularity != "No photo",
          Circularity != "") %>%
@@ -82,13 +81,33 @@ combined <- bind_rows(museum, overlap) %>%
 ### Step 3: Plot this mess
 
 ```{r}
+species_order <- combined %>%
+  filter(dataset == "Museum") %>%
+  group_by(Genus_species) %>%
+  summarise(
+    median_circularity = median(value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(median_circularity))
+
+combined <- combined %>%
+    mutate(
+    Genus_species = factor(
+      Genus_species,
+      levels = species_order$Genus_species
+    )
+  )
+```
+
+
+```{r}
 circularityPlot <-ggplot(combined, aes(x = value, y = Genus_species,
                                        shape = dataset, color = dataset)) +
   geom_segment(aes(x = -Inf, xend = Inf,
                    y = Genus_species, yend = Genus_species,
                    color = "grey90"),
                inherit.aes = FALSE, linewidth = 0.2) +
-  geom_point() +
+  geom_point(alpha = 0.8) +
   scale_shape_manual(values = c(Museum = 16,
                                       RoW = 17),
                      name = "Dataset") +
