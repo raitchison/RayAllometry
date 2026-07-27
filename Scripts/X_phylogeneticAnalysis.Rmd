@@ -166,12 +166,12 @@ phyloTreeFull <- phyloTree +
              orientation = "y",
              stat = "identity",
              pwidth = 0.05) +
-  scale_fill_manual(values = c("Aquilopelagic" = "#f1aa98",
-                               "Planktitrophic" = "#e95e50",
-                               "Rajobenthic" = "#fff3b0",
-                               "Rajopelagic" = "#ffcf6e",
-                               "Rhinobenthic" = "#3fccbb",
-                               "Torpedobenthic" = "#287271")) +
+  scale_fill_manual(values = c("Aquilopelagic" = "#e95e50",
+                                "Planktitrophic" = "#f1aa98",
+                                "Rajobenthic" = "#f3b600",
+                                "Rajopelagic" = "#ffda8f",
+                                "Rhinobenthic" = "#3fccbb",
+                                "Torpedobenthic" = "#287271")) +
   # Propulsion Method
   new_scale_fill() +
   geom_fruit(data = rayMeans,
@@ -182,9 +182,18 @@ phyloTreeFull <- phyloTree +
              stat = "identity",
              pwidth = 0.05) +
   scale_fill_manual(values = c("Caudal Propulsion" = "#084C61",
-                               "Pectoral Oscillation" = "#DB3A34",
-                               "Pectoral Undulation" = "#FFC857"))
+                               "Pectoral Oscillation" = "#b92621",
+                               "Pectoral Undulation" = "#e9ba00")) + 
+  theme(legend.position = "inside",
+        legend.position.inside = c(0.1, 0.9),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12))
 
 phyloTreeFull
+```
+
+```{r}
+ggsave("Results/Figures/PhylogeneticTree.png", phyloTreeFull,
+       width = 10, height = 20)
 ```
 
