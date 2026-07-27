@@ -88,18 +88,38 @@ summary(rayPCA)
 # Extract coordinates for the first two components
 pcaScores <- scores(rayPCA, choices = c(1, 2), display = "sites")
 
+# Extract loadings for variables
+loadings <- scores(rayPCA, choices = c(1, 2), display = "species")
+
 # Bind to rayProportions
 rays <- cbind(rayProportions, pcaScores)
 ```
 
 ```{r}
 plotPCA <- ggplot(rays, aes(x = PC1, y = PC2,
-                            color = Ecomorphotype)) +
-  geom_point(size = 3, alpha = 0.8) +
-  labs(x = "PC1 (35.9% Variance Explained)",
-       y = "PC2 (36.2% Variance Explained)") +
-  theme(axis.title = element_text(size = 14)) +
-  theme_classic()
+                            color = Ecomorphotype,
+                            shape = Ecomorphotype)) +
+  geom_point(size = 3, alpha = 0.9) +
+  scale_color_manual(values = c("Aquilopelagic" = "#e95e50",
+                                "Planktitrophic" = "#f1aa98",
+                                "Rajobenthic" = "#f3b600",
+                                "Rajopelagic" = "#ffda8f",
+                                "Rhinobenthic" = "#3fccbb",
+                                "Torpedobenthic" = "#287271")) +
+  scale_shape_manual(values = c("Aquilopelagic" = 17,
+                                "Planktitrophic" = 17,
+                                "Rajobenthic" = 19,
+                                "Rajopelagic" = 19,
+                                "Rhinobenthic" = 15,
+                                "Torpedobenthic" = 15)) +
+  labs(x = "PC1 (31.7% Variance Explained)",
+       y = "PC2 (28.4% Variance Explained)") +
+  theme_classic() +
+  theme(axis.title = element_text(size = 12),
+        legend.position = "inside",
+        legend.position.inside = c(0.9, 0.85),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11))
 
 plotPCA
 ```
@@ -110,3 +130,8 @@ ggsave("Results/Figures/PCA.png", plotPCA,
        height = 9, width = 16)
 ```
 
+# View plot with characters
+
+```{r}
+plot(rayPCA, display = c("sites", "species"))
+```

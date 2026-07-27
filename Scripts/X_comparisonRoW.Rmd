@@ -123,5 +123,5 @@ circularityPlot <-ggplot(combined, aes(x = value, y = Genus_species,
 
 ```{r}
 ggsave("Results/Figures/Circularity.png", circularityPlot,
-       height = 9, width = 5)
+       height = 12, width = 5)
 ```
