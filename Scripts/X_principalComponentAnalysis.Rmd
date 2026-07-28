@@ -28,15 +28,15 @@ raysClean <- rayData %>%
   filter(Maturity == "Mature" |
          Maturity == "Subadult") %>%
   # Select columns to include in the PCA
-  select(Genus_species, Ecomorphotype, DiscWidth_CM, DiscLength_CM, LengthToApex_CM,
-         Circularity, SpiracleLength, GSavg) %>%
-  # Convert circularity to numeric
-  mutate(Circularity = as.numeric(Circularity)) %>%
-  # Remove individuals that have NAs
-  drop_na() %>%
-  # Tidy up Circularity column
-  filter(Circularity != "blank tiff",
-         Circularity != "No photo")
+  select(Genus_species, Ecomorphotype, PropulsionMethod, DiscWidth_CM, 
+         DiscLength_CM, LengthToApex_CM, SpiracleLength, GSavg)
+  # # Convert circularity to numeric
+  # mutate(Circularity = as.numeric(Circularity)) %>%
+  # # Remove individuals that have NAs
+  # drop_na() %>%
+  # # Tidy up Circularity column
+  # filter(Circularity != "blank tiff",
+  #        Circularity != "No photo")
 ```
 
 Take an average for each species to reduce the influence of an uneven number of specimens per species.
@@ -51,9 +51,10 @@ rayMeans <- raysClean %>%
             Mean_LengthToApex = mean(LengthToApex_CM, na.rm = TRUE),
             Mean_SpiracleLength = mean(SpiracleLength, na.rm = TRUE),
             Mean_GSavg = mean(GSavg, na.rm = TRUE),
-            Mean_Circularity = mean(Circularity, na.rm = TRUE),
+            # Mean_Circularity = mean(Circularity, na.rm = TRUE),
             # Retain Ecomorphotype data
-            Ecomorphotype = first(Ecomorphotype))
+            Ecomorphotype = first(Ecomorphotype),
+            PropulsionMethod = first(PropulsionMethod))
 ```
 
 Create proportions.
@@ -64,7 +65,7 @@ rayProportions <- rayMeans %>%
          LengthToApex_DL = Mean_LengthToApex/Mean_DiscLength,
          SpiracleLength_DL = Mean_SpiracleLength/Mean_DiscLength,
          GillSlitHeight_DL = Mean_GSavg/Mean_DiscLength) %>%
-  select(Genus_species, Ecomorphotype, DiscRatio, Mean_Circularity,
+  select(Genus_species, Ecomorphotype, PropulsionMethod, DiscRatio, # Mean_Circularity,
          LengthToApex_DL, SpiracleLength_DL, GillSlitHeight_DL)
 ```
 
@@ -72,7 +73,7 @@ rayProportions <- rayMeans %>%
 
 ```{r}
 # Extract numeric columns
-rayNumeric <- rayProportions[3:7]
+rayNumeric <- rayProportions[4:7]
 
 # Run PCA
 rayPCA <- rda(rayNumeric, scale = TRUE)
@@ -97,27 +98,24 @@ rays <- cbind(rayProportions, pcaScores)
 
 ```{r}
 plotPCA <- ggplot(rays, aes(x = PC1, y = PC2,
-                            color = Ecomorphotype,
-                            shape = Ecomorphotype)) +
+                            color = PropulsionMethod,
+                            shape = PropulsionMethod)) +
   geom_point(size = 3, alpha = 0.9) +
-  scale_color_manual(values = c("Aquilopelagic" = "#e95e50",
-                                "Planktitrophic" = "#f1aa98",
-                                "Rajobenthic" = "#f3b600",
-                                "Rajopelagic" = "#ffda8f",
-                                "Rhinobenthic" = "#3fccbb",
-                                "Torpedobenthic" = "#287271")) +
-  scale_shape_manual(values = c("Aquilopelagic" = 17,
-                                "Planktitrophic" = 17,
-                                "Rajobenthic" = 19,
-                                "Rajopelagic" = 19,
-                                "Rhinobenthic" = 15,
-                                "Torpedobenthic" = 15)) +
-  labs(x = "PC1 (31.7% Variance Explained)",
-       y = "PC2 (28.4% Variance Explained)") +
+  scale_color_manual(values = c("Caudal Propulsion" = "#084C61",
+                               "Pectoral Oscillation" = "#b92621",
+                               "Pectoral Undulation" = "#e9ba00")) +
+  scale_shape_manual(values = c("Pectoral Oscillation" = 17,
+                                "Pectoral Undulation" = 19,
+                                "Caudal Propulsion" = 15)) +
+  labs(x = "PC1 (32.3% Variance Explained)",
+       y = "PC2 (27.0% Variance Explained)",
+       color = "Propulsion Method",
+       shape = "Propulsion Method") +
   theme_classic() +
-  theme(axis.title = element_text(size = 12),
+  theme(axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
         legend.position = "inside",
-        legend.position.inside = c(0.9, 0.85),
+        legend.position.inside = c(0.08, 0.9),
         legend.title = element_text(size = 12),
         legend.text = element_text(size = 11))
 
