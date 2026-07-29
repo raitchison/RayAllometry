@@ -1,0 +1,430 @@
+---
+title: "X_scalingAnalysis"
+output: html_document
+---
+
+# Load libraries
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Load patchwork
+library(patchwork)
+```
+
+# Load data
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+```
+
+# Preprocess data for clean plotting later
+
+```{r}
+rayData <- rayData %>%
+  # Replace _ in Genus_species with a space
+  mutate(Genus_species = gsub("_", " ", Genus_species))
+```
+
+# Split data by propulsion method
+
+```{r}
+# Caudal propulsion
+caudalSpecies <- rayData %>%
+  filter(PropulsionMethod == "Caudal Propulsion")
+
+# Pectoral oscillation
+oscSpecies <- rayData %>%
+  filter(PropulsionMethod == "Pectoral Oscillation")
+
+# Pectoral undulation
+undSpecies <- rayData %>%
+  filter(PropulsionMethod == "Pectoral Undulation")
+```
+
+# Calculate proportional size of spiracles and gills
+
+```{r}
+# Caudal propulsion
+caudalSpecies <- caudalSpecies %>%
+  # Calculate proportions
+  mutate(SPL_TL = ((SpiracleLength * 10) / TotalLength_CM),
+         GSH_TL = ((GSavg * 10) / TotalLength_CM)) %>%
+  # Drop rows with NAs
+  drop_na(SPL_TL, GSH_TL) %>%
+  # Remove species with less than 3 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 2) %>%
+  ungroup()
+
+# Pectoral oscillation
+oscSpecies <- oscSpecies %>%
+  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
+         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  drop_na(SPL_DW, GSH_DW) %>%
+  # Remove species with less than 3 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 2) %>%
+  ungroup()
+
+# Pectoral undulation
+undSpecies <- undSpecies %>%
+  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
+         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  drop_na(SPL_DW, GSH_DW)%>%
+  # Remove species with less than 3 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 2) %>%
+  ungroup()
+```
+
+# Create some subdivided data frames for ease of visualization
+
+Caudal propulsion - split by Order
+
+```{r}
+# Rhinopristiformes
+Rhinopristiformes <- caudalSpecies %>%
+  filter(Order == "Rhinopristiformes")
+
+# Torpediniformes
+Torpediniformes <- caudalSpecies %>%
+  filter(Order == "Torpediniformes")
+```
+
+Pectoral oscillation - no split.
+
+Pectoral undulation - split by Order.
+
+```{r}
+# Myliobatiformes
+Myliobatiformes <- undSpecies %>%
+  filter(Order == "Myliobatiformes")
+
+# Rajiformes
+Rajiformes <- undSpecies %>%
+  filter(Order == "Rajiformes")
+```
+
+# Linear models
+
+```{r}
+# lm?
+```
+
+# Plot
+
+Caudal propulsion plots.
+
+```{r}
+# Rhinopristiformes
+# GSH
+rhinoGSHPlot <- ggplot(Rhinopristiformes, aes(x = TotalLength_CM, y = GSH_TL,
+                                           color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Glaucostegidae" = "#130032",
+                                "Pristidae" = "#492268",
+                                "Rhinidae" = "#5f2c88",
+                                "Rhinobatidae" = "#a26acf",
+                                "Trygonorrhinidae" = "#bc94dc",
+                                "Zanobatidae" = "#e3d1f0")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 3) +
+  labs(x = "Total length (cm)",
+       y = "Relative gill slit height",
+       title = "Rhinopristiformes") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        legend.position = "none",
+        axis.title.x = element_blank())
+
+rhinoGSHPlot
+
+# SPH
+rhinoSPLplot <- ggplot(Rhinopristiformes, aes(x = TotalLength_CM, y = SPL_TL,
+                                           color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Glaucostegidae" = "#130032",
+                                "Pristidae" = "#492268",
+                                "Rhinidae" = "#5f2c88",
+                                "Rhinobatidae" = "#a26acf",
+                                "Trygonorrhinidae" = "#bc94dc",
+                                "Zanobatidae" = "#e3d1f0")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 3) +
+  labs(x = "Total length (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal")
+
+rhinoSPLplot
+
+# Torpediniformes
+# GSH
+torpedoGSHPlot <- ggplot(Torpediniformes, aes(x = TotalLength_CM, y = GSH_TL,
+                                              color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Narcinidae" = "#de6b00",
+                                "Narkidae" = "#d5a702",
+                                "Torpedinidae" = "#ffdd00")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 3) +
+  labs(x = "Total length (cm)",
+       y = "Relative gill slit height",
+       title = "Torpediniformes") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+
+torpedoGSHPlot
+
+# SPH
+torpedoSPLplot <- ggplot(Torpediniformes, aes(x = TotalLength_CM, y = SPL_TL,
+                                              color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Narcinidae" = "#de6b00",
+                                "Narkidae" = "#d5a702",
+                                "Torpedinidae" = "#ffdd00")) +
+  facet_wrap(~ Genus_species,
+              scales = "free_x",
+             ncol = 3) +
+  labs(x = "Total length (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        axis.title.y = element_blank())
+
+torpedoSPLplot
+```
+
+Pectoral oscillation plots.
+
+```{r}
+# GSH
+oscGSHplot <- ggplot(oscSpecies, aes(x = DiscWidth_CM, y = GSH_DW,
+                                  color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Myliobatidae" = "#C4203A",
+                                "Rhinopteridae" = "#ED909F")) +
+  facet_wrap(~ Genus_species, 
+             scales = "free_x") +
+  labs(x = "Disc width (cm)",
+       y = "Relative gill slit height") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.position = "none",
+        axis.title.x = element_blank())
+
+oscGSHplot
+
+# SPL
+oscSPLplot <- ggplot(oscSpecies, aes(x = DiscWidth_CM, y = SPL_DW,
+                                  color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 1),
+                     values = c("Myliobatidae" = "#C4203A",
+                                "Rhinopteridae" = "#ED909F")) +
+  facet_wrap(~ Genus_species, 
+             scales = "free_x") +
+  labs(x = "Disc width (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal")
+
+oscSPLplot
+```
+
+Pectoral undulation plots.
+
+```{r}
+# Myliobatiformes
+# GSH
+mylioGSHPlot <- ggplot(Myliobatiformes, aes(x = DiscWidth_CM, y = GSH_DW,
+                                           color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 2),
+                     values = c("Dasyatidae" = "#570e1a",
+                                "Gymnuridae" = "#761323",
+                                "Hexatrygonidae" = "#8a1729",
+                                "Plesiobatidae" = "#DF3853",
+                                "Potamotrygonidae" = "#E66479",
+                                "Urolophidae" = "#F4BCC5",
+                                "Urotrygonidae" = "#f9dce0")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 4) +
+  labs(x = "Disc width (cm)",
+       y = "Relative gill slit height",
+       title = "Myliobatiformes") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        legend.position = "none",
+        axis.title.x = element_blank())
+
+mylioGSHPlot
+
+# SPH
+mylioSPLplot <- ggplot(Myliobatiformes, aes(x = DiscWidth_CM, y = GSH_DW,
+                                           color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 2),
+                     values = c("Dasyatidae" = "#570e1a",
+                                "Gymnuridae" = "#761323",
+                                "Hexatrygonidae" = "#8a1729",
+                                "Plesiobatidae" = "#DF3853",
+                                "Potamotrygonidae" = "#E66479",
+                                "Urolophidae" = "#F4BCC5",
+                                "Urotrygonidae" = "#f9dce0")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 4) +
+  labs(x = "Disc width (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal")
+
+mylioSPLplot
+
+# Rajiformes
+# GSH
+rajiGSHPlot <- ggplot(Rajiformes, aes(x = DiscWidth_CM, y = GSH_DW,
+                                              color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 2),
+                     values = c("Anacanthobatidae" = "#023e8a",
+                                "Arhynchobatidae" = "#0077b6",
+                                "Gurgesiellidae" = "#00b4d8",
+                                "Rajidae" = "#ade8f4")) +
+  facet_wrap(~ Genus_species,
+             scales = "free_x",
+             ncol = 4) +
+  labs(x = "Disc width (cm)",
+       y = "Relative gill slit height",
+       title = "Rajiformes") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+
+rajiGSHPlot
+
+# SPH
+rajiSPLplot <- ggplot(Rajiformes, aes(x = DiscWidth_CM, y = GSH_DW,
+                                              color = Family)) +
+  geom_point() +
+  scale_color_manual(guide = guide_legend(nrow = 2),
+                     values = c("Anacanthobatidae" = "#023e8a",
+                                "Arhynchobatidae" = "#0077b6",
+                                "Gurgesiellidae" = "#00b4d8",
+                                "Rajidae" = "#ade8f4")) +
+  facet_wrap(~ Genus_species,
+              scales = "free_x",
+             ncol = 4) +
+  labs(x = "Disc width (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(size = 9, face = "italic"),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        axis.title.y = element_blank())
+
+rajiSPLplot
+```
+
+# Combine plots using patchwork.
+
+```{r}
+caudalPlot <- 
+  # Top panel
+  (rhinoGSHPlot + plot_spacer() + torpedoGSHPlot +
+     # Set widths of each plot
+     plot_layout(widths = c(1, 0.05, 1))) / 
+  # Spacer
+  plot_spacer() /
+  # Bottom panel
+  (rhinoSPLplot + plot_spacer() + torpedoSPLplot +
+     # Set widths of each plot
+     plot_layout(widths = c(1, 0.05, 1))) +
+  # Set heights of each plot
+  plot_layout(heights = c(1, 0.05, 1))
+
+caudalPlot
+```
+
+```{r}
+oscillationPlot <- 
+  oscGSHplot / plot_spacer() / oscSPLplot +
+  plot_layout(heights = c(1, 0.05, 1))
+
+oscillationPlot
+```
+
+```{r}
+undulationPlot <- 
+  # Top panel
+  (mylioGSHPlot + plot_spacer() + rajiGSHPlot +
+     # Set widths of each plot
+     plot_layout(widths = c(1, 0.05, 1))) / 
+  # Spacer
+  plot_spacer() /
+  # Bottom panel
+  (mylioSPLplot + plot_spacer() + rajiSPLplot +
+     # Set widths of each plot
+     plot_layout(widths = c(1, 0.05, 1))) +
+  # Set heights of each plot
+  plot_layout(heights = c(1, 0.05, 1))
+
+undulationPlot
+```
+
+# Save combined plots.
+
+```{r}
+# Caudal propulsion plot
+ggsave("Results/Figures/caudalPropulsionAllometry.png", caudalPlot,
+       width = 12, height = 20)
+
+# Pectoral oscillation plot
+ggsave("Results/Figures/pectoralOscillationAllometry.png", oscillationPlot,
+       width = 8, height = 10)
+
+# Pectoral undulation plot
+ggsave("Results/Figures/pectoralUndulationAllometry.png", undulationPlot,
+       width = 12, height = 20)
+```
+
