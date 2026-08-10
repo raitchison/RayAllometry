@@ -66,19 +66,12 @@ rayMeans <- rayData %>%
     Family = first(Family),
     # Retain Ecomorphotype data
     Ecomorphotype = first(Ecomorphotype),
+    PropulsionMethod = first(PropulsionMethod),
     # Calculate means
-    Mean_SpiracleLength = mean((((SpiracleLength * 10)/DiscLength_CM) * 100), na.rm = TRUE),
+    Mean_SpiracleLength = mean((((SpiracleLength * 10)/DiscLength_CM) * 100), 
+                               na.rm = TRUE),
     Mean_GSavg = mean((((GSavg* 10)/DiscLength_CM) * 100), na.rm = TRUE),
     Mean_Circularity = mean(Circularity, na.rm = TRUE)) %>%
-  # Add propulsion method data
-  mutate(PropulsionMethod = case_when(
-    Ecomorphotype == "Aquilopelagic" ~ "Pectoral Oscillation",
-    Ecomorphotype == "Planktitrophic" ~ "Pectoral Oscillation",
-    Ecomorphotype == "Rajobenthic" ~ "Pectoral Undulation",
-    Ecomorphotype == "Rajopelagic" ~ "Pectoral Undulation",
-    Ecomorphotype == "Rhinobenthic" ~ "Caudal Propulsion",
-    Ecomorphotype == "Torpedobenthic" ~ "Caudal Propulsion"
-  )) %>%
   as.data.frame()
 ```
 
@@ -196,4 +189,3 @@ phyloTreeFull
 ggsave("Results/Figures/PhylogeneticTree.png", phyloTreeFull,
        width = 10, height = 20)
 ```
-
