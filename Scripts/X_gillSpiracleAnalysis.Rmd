@@ -1,0 +1,200 @@
+---
+title: "X_gillSpiracleAnalysis"
+output: html_document
+---
+
+# Load libraries
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Load patchwork for plotting
+library(patchwork)
+```
+
+# Load data
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+```
+
+# Split data by propulsion method
+
+```{r}
+# Caudal propulsion
+caudalSpecies <- rayData %>%
+  filter(PropulsionMethod == "Caudal Propulsion")
+
+# Pectoral oscillation
+oscSpecies <- rayData %>%
+  filter(PropulsionMethod == "Pectoral Oscillation")
+
+# Pectoral undulation
+undSpecies <- rayData %>%
+  filter(PropulsionMethod == "Pectoral Undulation")
+```
+
+# Calculate proportional size of spiracles and gills
+
+```{r}
+# Caudal propulsion
+caudalSpecies <- caudalSpecies %>%
+  # Calculate proportions
+  mutate(SPL_TL = ((SpiracleLength * 10) / TotalLength_CM),
+         GSH_TL = ((GSavg * 10) / TotalLength_CM)) %>%
+  # Drop rows with NAs
+  drop_na(SPL_TL, GSH_TL) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+
+# Pectoral oscillation
+oscSpecies <- oscSpecies %>%
+  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
+         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  drop_na(SPL_DW, GSH_DW) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+
+# Pectoral undulation
+undSpecies <- undSpecies %>%
+  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
+         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  drop_na(SPL_DW, GSH_DW)%>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+```
+
+# Analyze data
+
+Caudal Propulsion
+
+```{r}
+# Log x and y
+logCaudal <- caudalSpecies %>%
+  mutate(logGSH_TL = log10(GSH_TL),
+         logSPL_TL = log10(SPL_TL),
+         logTL = log10(TotalLength_CM))
+
+# Model TL ~ GSH
+caudalModel <- lm(logSPL_TL ~  logGSH_TL * Genus_species, data = logCaudal)
+
+summary(caudalModel)
+```
+
+Pectoral Oscillation
+
+```{r}
+# Log x and y
+logOsc <- oscSpecies %>%
+  mutate(logGSH_DW = log10(GSH_DW),
+         logSPL_DW = log10(SPL_DW),
+         logDW = log10(DiscWidth_CM))
+
+# Model GSH ~ SPL
+oscModel <- lm(logSPL_DW ~  logGSH_DW * Genus_species, data = logOsc)
+
+summary(oscModel)
+```
+
+Pectoral Oscillation
+
+```{r}
+# Log x and y
+logUnd <- undSpecies %>%
+  mutate(logGSH_DW = log10(GSH_DW),
+         logSPL_DW = log10(SPL_DW),
+         logDW = log10(DiscWidth_CM))
+
+# Model GSH ~ SPL
+undModel <- lm(logSPL_DW ~  logGSH_DW * Genus_species, data = logUnd)
+
+summary(undModel)
+```
+
+# Plot
+
+# Caudal propulsion
+
+```{r}
+caudalPlot <- ggplot(data = logCaudal, aes(x = logGSH_TL, y = logSPL_TL,
+                                    color = Family)) +
+  geom_point() +
+  scale_color_manual(values = c("Glaucostegidae" = "#130032",
+                                "Pristidae" = "#492268",
+                                "Rhinidae" = "#5f2c88",
+                                "Rhinobatidae" = "#a26acf",
+                                "Trygonorrhinidae" = "#bc94dc",
+                                "Zanobatidae" = "#e3d1f0",
+                                "Narcinidae" = "#de6b00",
+                                "Narkidae" = "#d5a702",
+                                "Torpedinidae" = "#ffdd00")) +
+  facet_wrap(~ Genus_species, scales = "free") +
+  labs(x = "Relative gill slit height",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme()
+
+caudalPlot
+
+ggsave("Results/Figures/caudalGSH_SPL.png", caudalPlot,
+       width = 16, height = 9)
+```
+
+# Pectoral oscillation
+
+```{r}
+oscPlot <- ggplot(data = logOsc, aes(x = logGSH_DW, y = logSPL_DW,
+                                    color = Family)) +
+  geom_point() +
+  scale_color_manual(values = c("Myliobatidae" = "#C4203A",
+                                "Rhinopteridae" = "#ED909F")) +
+  facet_wrap(~ Genus_species, scales = "free") +
+  labs(x = "Relative gill slit height",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme()
+
+oscPlot
+
+ggsave("Results/Figures/oscGSH_SPL.png", oscPlot,
+       width = 16, height = 9)
+```
+
+# Pectoral undulation
+
+```{r}
+undPlot <- ggplot(data = logUnd, aes(x = logGSH_DW, y = logSPL_DW,
+                                    color = Family)) +
+  geom_point() +
+  scale_color_manual(values = c(# Rajiformes
+                                "Anacanthobatidae" = "#023e8a",
+                                "Arhynchobatidae" = "#0077b6",
+                                "Gurgesiellidae" = "#00b4d8",
+                                "Rajidae" = "#ade8f4",
+                                # Myliobatiformes
+                                "Dasyatidae" = "#570e1a",
+                                "Gymnuridae" = "#761323",
+                                "Hexatrygonidae" = "#8a1729",
+                                "Plesiobatidae" = "#DF3853",
+                                "Potamotrygonidae" = "#E66479",
+                                "Urolophidae" = "#F4BCC5",
+                                "Urotrygonidae" = "#f9dce0")) +
+  facet_wrap(~ Genus_species, scales = "free") +
+  labs(x = "Relative gill slit height",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme()
+
+undPlot
+
+ggsave("Results/Figures/undGSH_SPL.png", undPlot,
+       width = 16, height = 9)
+```

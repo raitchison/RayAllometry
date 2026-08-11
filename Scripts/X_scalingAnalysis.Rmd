@@ -134,12 +134,12 @@ logCaudal <- caudalSpecies %>%
          logTL = log10(TotalLength_CM))
 
 # Model TL ~ GSH
-caudalGSHmodel <- lm(logGSH_TL ~  logTL * Genus_species, logCaudal)
+caudalGSHmodel <- lm(logGSH_TL ~  logTL * Genus_species, data = logCaudal)
 
 summary(caudalGSHmodel)
 
 # Model TL ~ SPL
-caudalSPLmodel <- lm(logSPL_TL ~ logTL * Genus_species, logCaudal)
+caudalSPLmodel <- lm(logSPL_TL ~ logTL * Genus_species, data = logCaudal)
 
 summary(caudalSPLmodel)
 ```
@@ -154,12 +154,12 @@ logOsc <- oscSpecies %>%
          logDW = log10(DiscWidth_CM))
 
 # Model TL ~ GSH
-oscGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, logOsc)
+oscGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, data = logOsc)
 
 summary(oscGSHmodel)
 
 # Model TL ~ SPL
-oscSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, logOsc)
+oscSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logOsc)
 
 summary(oscSPLmodel)
 ```
@@ -174,12 +174,12 @@ logUnd <- undSpecies %>%
          logDW = log10(DiscWidth_CM))
 
 # Model TL ~ GSH
-undGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, logUnd)
+undGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, data = logUnd)
 
 summary(undGSHmodel)
 
 # Model TL ~ SPL
-undSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, logUnd)
+undSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logUnd)
 
 summary(undSPLmodel)
 ```
@@ -543,14 +543,15 @@ rayData <- rayData %>%
 # Restarting here for plotting
 
 ```{r}
-# Generate grid of data over your x-axis range for smooth lines
+# Generate predicted data for smooth lines
 caudalGSHpred <- data.frame(logTL = seq(min(logCaudal$logTL),
                                             max(logCaudal$logTL),
-                                            length.out = 100),
-                            Genus_species = logCaudal$Genus_species)
+                                            length.out = 208),
+                            Genus_species = logCaudal$Genus_species,
+                            Family = logCaudal$Family)
 
 # All model's predicted values to data frame
-caudalGSHpred$predictedGSH <- predict(caudalGSHmodel, 
+caudalGSHpred$predictedGSH <- predict(caudalGSHmodel,
                                       newdata = caudalGSHpred)
 ```
 
@@ -564,9 +565,9 @@ logCaudal <- logCaudal %>%
            remove = FALSE)
 
 # Plot
-caudalPlot <- ggplot(logCaudal, aes(x = logTL, y = logGSH_TL,
+caudalPlot <- ggplot(data = logCaudal, aes(x = logTL, y = logGSH_TL,
                                     color = Family)) +
-  geom_smooth(aes(group = Genus_species), method = "lm", se = FALSE) +
+  geom_line(data = caudalGSHpred, aes(y = predictedGSH)) +
   geom_point() +
   scale_color_manual(values = c("Glaucostegidae" = "#130032",
                                 "Pristidae" = "#492268",
