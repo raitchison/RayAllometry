@@ -107,15 +107,15 @@ plotPCA <- ggplot(rays, aes(x = PC1, y = PC2,
   scale_shape_manual(values = c("Pectoral Oscillation" = 17,
                                 "Pectoral Undulation" = 19,
                                 "Caudal Propulsion" = 15)) +
-  labs(x = "PC1 (32.3% Variance Explained)",
-       y = "PC2 (27.0% Variance Explained)",
-       color = "Propulsion Method",
-       shape = "Propulsion Method") +
+  labs(x = "PC1 (33.2% Variance Explained)",
+       y = "PC2 (25.7% Variance Explained)",
+       color = "Swimming Style",
+       shape = "Swimming Style") +
   theme_classic() +
   theme(axis.title = element_text(size = 14),
         axis.text = element_text(size = 12),
         legend.position = "inside",
-        legend.position.inside = c(0.08, 0.9),
+        legend.position.inside = c(0.85, 0.9),
         legend.title = element_text(size = 12),
         legend.text = element_text(size = 11))
 
