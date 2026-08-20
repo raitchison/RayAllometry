@@ -47,7 +47,7 @@ caudalSpecies <- caudalSpecies %>%
   # Calculate proportions
   mutate(SPL_TL = ((SpiracleLength * 10) / TotalLength_CM),
          GSH_TL = ((GSavg * 10) / TotalLength_CM)) %>%
-  # Drop rows with NAs
+  # Drop rows with NAs in SPL or GSH
   drop_na(SPL_TL, GSH_TL) %>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
@@ -58,6 +58,7 @@ caudalSpecies <- caudalSpecies %>%
 oscSpecies <- oscSpecies %>%
   mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
          GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  # Drop rows with NAs in SPL or GSH
   drop_na(SPL_DW, GSH_DW) %>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
@@ -68,6 +69,7 @@ oscSpecies <- oscSpecies %>%
 undSpecies <- undSpecies %>%
   mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
          GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  # Drop rows with NAs in SPL or GSH
   drop_na(SPL_DW, GSH_DW)%>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
@@ -93,7 +95,8 @@ summary(caudalGSHmodel)
 # Convert summary to a df
 caudalGSHmodel_sum <- tidy(caudalGSHmodel)
 # Export to csv
-write.csv(caudalGSHmodel_sum, file = "Results/Tables/CaudalModelGSH.csv", row.names = FALSE)
+write.csv(caudalGSHmodel_sum, file = "Results/Tables/CaudalModelGSH.csv", 
+          row.names = FALSE)
 
 # Model TL ~ SPL
 caudalSPLmodel <- lm(logSPL_TL ~ logTL * Genus_species, data = logCaudal)
@@ -102,7 +105,54 @@ summary(caudalSPLmodel)
 # Convert summary to a df
 caudalSPLmodel_sum <- tidy(caudalSPLmodel)
 # Export to csv
-write.csv(caudalSPLmodel_sum, file = "Results/Tables/CaudalModelSPL.csv", row.names = FALSE)
+write.csv(caudalSPLmodel_sum, file = "Results/Tables/CaudalModelSPL.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+# GSH
+# Extract coefficients table
+caudalGSH_coef <- summary(caudalGSHmodel)$coefficients
+# "Attach" a significance status to each species
+caudalGSH_status <- data.frame(Genus_species = unique(logCaudal$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logTL:Genus_species", Genus_species)
+      if (row_name %in% rownames(caudalGSH_coef)) {
+        # Get the p-value
+        caudalGSH_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        caudalGSH_coef["logTL", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
+
+# SPL
+# Extract coefficients table
+caudalSPL_coef <- summary(caudalSPLmodel)$coefficients
+# "Attach" a significance status to each species
+caudalSPL_status <- data.frame(Genus_species = unique(logCaudal$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logTL:Genus_species", Genus_species)
+      if (row_name %in% rownames(caudalSPL_coef)) {
+        # Get the p-value
+        caudalSPL_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        caudalSPL_coef["logTL", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
 ```
 
 Pectoral Oscillation
@@ -121,7 +171,8 @@ summary(oscGSHmodel)
 # Convert summary to a df
 oscGSHmodel_sum <- tidy(oscGSHmodel)
 # Export to csv
-write.csv(oscGSHmodel_sum, file = "Results/Tables/OscillationModelGSH.csv", row.names = FALSE)
+write.csv(oscGSHmodel_sum, file = "Results/Tables/OscillationModelGSH.csv", 
+          row.names = FALSE)
 
 # Model TL ~ SPL
 oscSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logOsc)
@@ -130,10 +181,57 @@ summary(oscSPLmodel)
 # Convert summary to a df
 oscSPLmodel_sum <- tidy(oscSPLmodel)
 # Export to csv
-write.csv(oscSPLmodel_sum, file = "Results/Tables/OscillationModelSPL.csv", row.names = FALSE)
+write.csv(oscSPLmodel_sum, file = "Results/Tables/OscillationModelSPL.csv", 
+          row.names = FALSE)
 ```
 
-Pectoral Oscillation
+```{r}
+# GSH
+# Extract coefficients table
+oscGSH_coef <- summary(oscGSHmodel)$coefficients
+# "Attach" a significance status to each species
+oscGSH_status <- data.frame(Genus_species = unique(logOsc$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logDW:Genus_species", Genus_species)
+      if (row_name %in% rownames(oscGSH_coef)) {
+        # Get the p-value
+        oscGSH_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        oscGSH_coef["logDW", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
+
+# SPL
+# Extract coefficients table
+oscSPL_coef <- summary(oscSPLmodel)$coefficients
+# "Attach" a significance status to each species
+oscSPL_status <- data.frame(Genus_species = unique(logOsc$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logDW:Genus_species", Genus_species)
+      if (row_name %in% rownames(oscSPL_coef)) {
+        # Get the p-value
+        oscSPL_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        oscSPL_coef["logDW", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
+```
+
+Pectoral Undulation
 
 ```{r}
 # Log x (body size) and y (GSH and SPL)
@@ -149,7 +247,8 @@ summary(undGSHmodel)
 # Convert summary to a df
 undGSHmodel_sum <- tidy(undGSHmodel)
 # Export to csv
-write.csv(undGSHmodel_sum, file = "Results/Tables/UndulationModelGSH.csv", row.names = FALSE)
+write.csv(undGSHmodel_sum, file = "Results/Tables/UndulationModelGSH.csv", 
+          row.names = FALSE)
 
 # Model TL ~ SPL
 undSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logUnd)
@@ -158,31 +257,96 @@ summary(undSPLmodel)
 # Convert summary to a df
 undSPLmodel_sum <- tidy(undSPLmodel)
 # Export to csv
-write.csv(undSPLmodel_sum, file = "Results/Tables/UndulationModelSPL.csv", row.names = FALSE)
+write.csv(undSPLmodel_sum, file = "Results/Tables/UndulationModelSPL.csv", 
+          row.names = FALSE)
 ```
 
-# Generate predictions for plotting
+```{r}
+# GSH
+# Extract coefficients table
+undGSH_coef <- summary(undGSHmodel)$coefficients
+# "Attach" a significance status to each species
+undGSH_status <- data.frame(Genus_species = unique(logUnd$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logDW:Genus_species", Genus_species)
+      if (row_name %in% rownames(undGSH_coef)) {
+        # Get the p-value
+        undGSH_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        undGSH_coef["logDW", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
+
+# SPL
+# Extract coefficients table
+undSPL_coef <- summary(undSPLmodel)$coefficients
+# "Attach" a significance status to each species
+undSPL_status <- data.frame(Genus_species = unique(logUnd$Genus_species)) %>%
+  rowwise() %>%
+  mutate(
+    # Create column to place p-values for each species
+    p_val = {
+      row_name <- paste0("logDW:Genus_species", Genus_species)
+      if (row_name %in% rownames(undSPL_coef)) {
+        # Get the p-value
+        undSPL_coef[row_name, "Pr(>|t|)"]
+      } else {
+        # p-value for "reference" species
+        undSPL_coef["logDW", "Pr(>|t|)"]
+      }
+    },
+    # Classify significance based on p-value of 0.05
+    Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
+  ungroup()
+```
+
+# Generate predictions for plotting (instead of geom_smooth from ggplot)
 
 Caudal propulsion.
 
 ```{r}
 # GSH
-# Generate predicted data for smooth lines
-caudalGSHpred <- expand.grid(logTL = seq(min(logCaudal$logTL), 
-                                         max(logCaudal$logTL), 
-                                         length.out = 100),
-                             Genus_species = unique(logCaudal$Genus_species))
+# Generate predicted data, grouping by species
+caudalGSHpred <- logCaudal %>%
+  group_by(Genus_species) %>%
+  reframe(logTL = seq(min(logTL), max(logTL), length.out = 100))
 # Add model predicted values to data frame
 caudalGSHpred$predictedGSH <- predict(caudalGSHmodel, newdata = caudalGSHpred)
 
 # SPL
 # Generate predicted data for smooth lines
-caudalSPLpred <- expand.grid(logTL = seq(min(logCaudal$logTL), 
-                                         max(logCaudal$logTL), 
-                                         length.out = 100),
-                             Genus_species = unique(logCaudal$Genus_species))
+caudalSPLpred <- logCaudal %>%
+  group_by(Genus_species) %>%
+  reframe(logTL = seq(min(logTL), max(logTL), length.out = 100))
 # Add model predicted values to data frame
 caudalSPLpred$predictedSPL <- predict(caudalSPLmodel, newdata = caudalSPLpred)
+```
+
+Join the significance status to data
+
+```{r}
+# Actual data
+# GSH
+logCaudalGSH <- logCaudal %>%
+  left_join(caudalGSH_status, by = "Genus_species")
+# SPL
+logCaudalSPL <- logCaudal %>%
+  left_join(caudalSPL_status, by = "Genus_species")
+
+# Prediction data
+# GSH
+caudalGSHpred <- caudalGSHpred %>%
+  left_join(caudalGSH_status, by = "Genus_species")
+# SPL
+caudalSPLpred <- caudalSPLpred %>%
+  left_join(caudalSPL_status, by = "Genus_species")
 ```
 
 Pectoral oscillation.
@@ -190,21 +354,39 @@ Pectoral oscillation.
 ```{r}
 # GSH
 # Generate predicted data for smooth lines
-oscGSHpred <- expand.grid(logDW = seq(min(logOsc$logDW), 
-                                         max(logOsc$logDW), 
-                                         length.out = 100),
-                          Genus_species = unique(logOsc$Genus_species))
+oscGSHpred <- logOsc %>%
+  group_by(Genus_species) %>%
+  reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
 # Add model predicted values to data frame
 oscGSHpred$predictedGSH <- predict(oscGSHmodel, newdata = oscGSHpred)
 
 # SPL
 # Generate predicted data for smooth lines
-oscSPLpred <- expand.grid(logDW = seq(min(logOsc$logDW), 
-                                         max(logOsc$logDW), 
-                                         length.out = 100),
-                             Genus_species = unique(logOsc$Genus_species))
+oscSPLpred <- logOsc %>%
+  group_by(Genus_species) %>%
+  reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
 # Add model predicted values to data frame
 oscSPLpred$predictedSPL <- predict(oscSPLmodel, newdata = oscSPLpred)
+```
+
+Join the significance status to data
+
+```{r}
+# Actual data
+# GSH
+logOscGSH <- logOsc %>%
+  left_join(oscGSH_status, by = "Genus_species")
+# SPL
+logOscSPL <- logOsc %>%
+  left_join(oscSPL_status, by = "Genus_species")
+
+# Predictions
+# GSH
+oscGSHpred <- oscGSHpred %>%
+  left_join(oscGSH_status, by = "Genus_species")
+# SPL
+oscSPLpred <- oscSPLpred %>%
+  left_join(oscSPL_status, by = "Genus_species")
 ```
 
 Pectoral undulation.
@@ -212,21 +394,39 @@ Pectoral undulation.
 ```{r}
 # GSH
 # Generate predicted data for smooth lines
-undGSHpred <- expand.grid(logDW = seq(min(logUnd$logDW), 
-                                         max(logUnd$logDW), 
-                                         length.out = 100),
-                          Genus_species = unique(logUnd$Genus_species))
+undGSHpred <- logUnd %>%
+  group_by(Genus_species) %>%
+  reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
 # Add model predicted values to data frame
 undGSHpred$predictedGSH <- predict(undGSHmodel, newdata = undGSHpred)
 
 # SPL
 # Generate predicted data for smooth lines
-undSPLpred <- expand.grid(logDW = seq(min(logUnd$logDW), 
-                                         max(logUnd$logDW), 
-                                         length.out = 100),
-                             Genus_species = unique(logUnd$Genus_species))
+undSPLpred <- logUnd %>%
+  group_by(Genus_species) %>%
+  reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
 # Add model predicted values to data frame
 undSPLpred$predictedSPL <- predict(undSPLmodel, newdata = undSPLpred)
+```
+
+Join the significance status to data
+
+```{r}
+# Actual data
+# GSH
+logUndGSH <- logUnd %>%
+  left_join(undGSH_status, by = "Genus_species")
+# SPL
+logUndSPL <- logUnd %>%
+  left_join(undSPL_status, by = "Genus_species")
+
+# Predictions
+# GSH
+undGSHpred <- undGSHpred %>%
+  left_join(undGSH_status, by = "Genus_species")
+# SPL
+undSPLpred <- undSPLpred %>%
+  left_join(undSPL_status, by = "Genus_species")
 ```
 
 # Plot results
@@ -234,89 +434,209 @@ undSPLpred$predictedSPL <- predict(undSPLmodel, newdata = undSPLpred)
 Caudal propulsion.
 
 ```{r}
-# Plot data with lines from model predictions
-caudalPlot <- ggplot(data = logCaudal, aes(x = logTL, y = logGSH_TL,
-                                    color = Family)) +
-  geom_line(data = caudalGSHpred, aes(x = logTL, y = predictedGSH, 
-                                      color = Genus_species),
+# Replace _ with " "
+# Actual data
+logCaudalGSH <- logCaudalGSH %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+logCaudalSPL <- logCaudalSPL %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# GSH
+# Predictions
+caudalGSHpred <- caudalGSHpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# SPL
+# Predictions
+caudalSPLpred <- caudalSPLpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+```
+
+```{r}
+# Plot GSH data with lines from model predictions
+caudalGSHplot <- ggplot(data = logCaudalGSH, aes(x = logTL, y = logGSH_TL)) +
+  geom_line(data = caudalGSHpred,
+            aes(x = logTL, y = predictedGSH, group = Genus_species, 
+                color = Significance),
             linewidth = 0.5) +
-  geom_point() +
-  scale_color_manual(values = c("Glaucostegidae" = "#130032",
-                                "Pristidae" = "#492268",
-                                "Rhinidae" = "#5f2c88",
-                                "Rhinobatidae" = "#a26acf",
-                                "Trygonorrhinidae" = "#bc94dc",
-                                "Zanobatidae" = "#e3d1f0",
-                                "Narcinidae" = "#de6b00",
-                                "Narkidae" = "#d5a702",
-                                "Torpedinidae" = "#ffdd00")) +
-  facet_wrap(~ Genus_species, scales = "free_x") +
+  geom_point(data = logCaudalGSH, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 4) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
   labs(x = "Total length (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme()
+  theme(strip.text = element_text(face = "italic"))
 
-caudalPlot
+caudalGSHplot
 
-ggsave("Results/Figures/caudalGSH_lines.png", caudalPlot,
-       width = 16, height = 9)
+ggsave("Results/Figures/caudalGSH.png", caudalGSHplot,
+       width = 12, height = 9)
+
+# Plot SPL data with lines from model predictions
+caudalSPLplot <- ggplot(data = logCaudalSPL, aes(x = logTL, y = logSPL_TL)) +
+  geom_line(data = caudalSPLpred,
+            aes(x = logTL, y = predictedSPL, group = Genus_species, 
+                color = Significance),
+            linewidth = 0.5) +
+  geom_point(data = logCaudalSPL, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 4) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  labs(x = "Total length (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"))
+
+caudalSPLplot
+
+ggsave("Results/Figures/caudalSPL.png", caudalSPLplot,
+       width = 12, height = 9)
 ```
 
 Pectoral oscillation.
 
 ```{r}
-# Plot data with lines from model predictions
-oscPlot <- ggplot(data = logOsc, aes(x = logDW, y = logGSH_DW,
-                                     color = Family)) +
-  geom_line(data = oscGSHpred, aes(x = logDW, y = predictedGSH, 
-                                      color = Genus_species),
+# Replace _ with " "
+# Actual data
+logOscGSH <- logOscGSH %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+logOscSPL <- logOscSPL %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# GSH
+# Predictions
+oscGSHpred <- oscGSHpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# SPL
+# Predictions
+oscSPLpred <- oscSPLpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+```
+
+```{r}
+# Plot GSH data with lines from model predictions
+oscGSHplot <- ggplot(data = logOscGSH, aes(x = logDW, y = logGSH_DW)) +
+  geom_line(data = oscGSHpred,
+            aes(x = logDW, y = predictedGSH, group = Genus_species, 
+                color = Significance),
             linewidth = 0.5) +
-  geom_point() +
-  scale_color_manual(values = c("Myliobatidae" = "#C4203A",
-                                "Rhinopteridae" = "#ED909F")) +
-  facet_wrap(~ Genus_species, scales = "free_x") +
-  labs(x = "Disc width (cm)",
+  geom_point(data = logOscGSH, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 2) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme()
+  theme(strip.text = element_text(face = "italic"))
 
-oscPlot
+oscGSHplot
 
-ggsave("Results/Figures/oscGSH_lines.png", oscPlot,
-       width = 16, height = 9)
+ggsave("Results/Figures/oscGSH.png", oscGSHplot,
+       width = 12, height = 9)
+
+# Plot SPL data with lines from model predictions
+oscSPLplot <- ggplot(data = logOscSPL, aes(x = logDW, y = logSPL_DW)) +
+  geom_line(data = oscSPLpred,
+            aes(x = logDW, y = predictedSPL, group = Genus_species, 
+                color = Significance),
+            linewidth = 0.5) +
+  geom_point(data = logOscSPL, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 2) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  labs(x = "Disc Width (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"))
+
+oscSPLplot
+
+ggsave("Results/Figures/oscSPL.png", oscSPLplot,
+       width = 12, height = 9)
 ```
 
 Pectoral undulation.
 
 ```{r}
-# Plot data with lines from model predictions
-undPlot <- ggplot(data = logUnd, aes(x = logDW, y = logGSH_DW,
-                                     color = Family)) +
-  geom_line(data = undGSHpred, aes(x = logDW, y = predictedGSH, 
-                                      color = Genus_species),
+# Replace _ with " "
+# Actual data
+logUndGSH <- logUndGSH %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+logUndSPL <- logUndSPL %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# GSH
+# Predictions
+undGSHpred <- undGSHpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+# SPL
+# Predictions
+undSPLpred <- undSPLpred %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+```
+
+```{r}
+# Plot GSH data with lines from model predictions
+undGSHplot <- ggplot(data = logUndGSH, aes(x = logDW, y = logGSH_DW)) +
+  geom_line(data = undGSHpred,
+            aes(x = logDW, y = predictedGSH, group = Genus_species, 
+                color = Significance),
             linewidth = 0.5) +
-  geom_point() +
-  scale_color_manual(values = c(# Rajiformes
-                                "Anacanthobatidae" = "#023e8a",
-                                "Arhynchobatidae" = "#0077b6",
-                                "Gurgesiellidae" = "#00b4d8",
-                                "Rajidae" = "#ade8f4",
-                                # Myliobatiformes
-                                "Dasyatidae" = "#570e1a",
-                                "Gymnuridae" = "#761323",
-                                "Hexatrygonidae" = "#8a1729",
-                                "Plesiobatidae" = "#DF3853",
-                                "Potamotrygonidae" = "#E66479",
-                                "Urolophidae" = "#F4BCC5",
-                                "Urotrygonidae" = "#f9dce0")) +
-  facet_wrap(~ Genus_species, scales = "free_x") +
-  labs(x = "Disc width (cm)",
+  geom_point(data = logUndGSH, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 6) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme()
+  theme(strip.text = element_text(face = "italic"))
 
-undPlot
+undGSHplot
 
-ggsave("Results/Figures/undGSH_lines.png", undPlot,
-       width = 16, height = 9)
+ggsave("Results/Figures/undGSH.png", undGSHplot,
+       width = 12, height = 9)
+
+# Plot SPL data with lines from model predictions
+undSPLplot <- ggplot(data = logUndSPL, aes(x = logDW, y = logSPL_DW)) +
+  geom_line(data = undSPLpred,
+            aes(x = logDW, y = predictedSPL, group = Genus_species, 
+                color = Significance),
+            linewidth = 0.5) +
+  geom_point(data = logUndSPL, aes(group = Genus_species, color = Significance)) +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  facet_wrap(~ Genus_species, scales = "free_x",
+             ncol = 6) +
+  scale_x_continuous(labels = function(x) round(10^x, 1)) +
+  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  labs(x = "Disc width (cm)",
+       y = "Relative spiracle length") +
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"))
+
+undSPLplot
+
+ggsave("Results/Figures/undSPL.png", undSPLplot,
+       width = 12, height = 9)
 ```
