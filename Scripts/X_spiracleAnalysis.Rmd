@@ -1,0 +1,82 @@
+---
+title: "X_spiracleAnalysis"
+output: html_document
+---
+
+# Load libraries
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Load broom
+library(broom)
+
+# Load patchwork for plotting
+library(patchwork)
+```
+
+# Load data
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+```
+
+# Prepare data for analysis
+
+```{r}
+logData <- rayData %>%
+  mutate(logSA = log10(SpiracleArea),
+         # Convert Spiracle Length (SPL) to cm and log10
+         SPL_cm = SpiracleLength * 10,
+         logSPL = log10(SPL_cm)) %>%
+  # Drop rows with NAs
+  drop_na(logSA, logSPL) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+```
+
+# Run linear model
+
+```{r}
+model <- lm(logSA ~  logSPL * Genus_species, data = logData)
+
+summary(model)
+```
+
+# Generate predicted data
+
+```{r}
+# Generate predicted data for smooth lines
+spiraclePred <- logData %>%
+  group_by(Genus_species) %>%
+  reframe(logSPL = seq(min(logSPL), max(logSPL), length.out = 100))
+# Add model predicted values to data frame
+spiraclePred$predictedSA <- predict(model, newdata = spiraclePred)
+```
+
+# Plot
+
+```{r}
+plot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
+  geom_point(alpha = 0.5) +
+  # geom_line(data = spiraclePred,
+  #           aes(x = logSPL, y = predictedSA, group = Genus_species),
+  #           linewidth = 0.5, alpha = 0.5) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3),
+                     labels = c(0, 1, 10, 100),
+                     limits = c(0, 3.5)) +
+  scale_y_continuous(labels = function(y) 10^y) + 
+  labs(x = "Spiracle Length (cm)",
+       y = expression("Spiracle Surface Area ( " * cm^2 * ")")) +
+  theme_classic()
+
+plot
+
+ggsave("Results/Figures/SPL_SA.png", plot,
+       width = 12, height = 9)
+```
+
