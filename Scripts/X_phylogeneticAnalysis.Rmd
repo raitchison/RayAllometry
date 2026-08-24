@@ -55,8 +55,6 @@ Duplicate rows are not allowed (i.e., there can only be 1 row per species)
 ```{r}
 # Create rayMeans dataframe
 rayMeans <- rayData %>%
-  # Convert Circularity to numeric
-  mutate(Circularity = as.numeric(Circularity)) %>%
   # Group by species
   group_by(Genus_species) %>%
   # Calculate mean values
@@ -70,8 +68,7 @@ rayMeans <- rayData %>%
     # Calculate means
     Mean_SpiracleLength = mean((((SpiracleLength * 10)/DiscLength_CM) * 100), 
                                na.rm = TRUE),
-    Mean_GSavg = mean((((GSavg* 10)/DiscLength_CM) * 100), na.rm = TRUE),
-    Mean_Circularity = mean(Circularity, na.rm = TRUE)) %>%
+    Mean_GSavg = mean((((GSavg* 10)/DiscLength_CM) * 100), na.rm = TRUE)) %>%
   as.data.frame()
 ```
 
@@ -108,6 +105,14 @@ names(order_colors) <- names(order_nodes)
 ```
 
 ```{r}
+# Plot simple tree
+phyloTree <- ggtree(singleRayTree)
+
+# Look at tree
+phyloTree
+```
+
+```{r}
 # Get plotted data
 tree_data <- phyloTree$data
 
@@ -122,17 +127,8 @@ order_y
 ```
 
 ```{r}
-# Plot simple tree before we go wild (without ASR)
-phyloTree <- ggtree(singleRayTree)
-
-# Look at tree
-phyloTree
-```
-
-```{r}
 # Create tree with no lines so downstream hilights are behind branches
-phyloTreeOrder <- ggtree(phyloTree, linewidth = 0,
-                         alpha = 0)
+phyloTreeOrder <- phyloTree
 
 for (o in names(order_nodes)) {
   phyloTreeOrder <- phyloTreeOrder +
@@ -148,25 +144,25 @@ phyloTreeOrder <- phyloTreeOrder +
 ```
 
 ```{r}
-# Create monster tree
+# Create tree with fruit
 phyloTreeFull <- phyloTree +
-  # Ecomorphotype
-  new_scale_fill() +
-  geom_fruit(data = rayMeans,
-             geom = geom_bar,
-             mapping = aes(y = Genus_species, x = 1, 
-                           fill = Ecomorphotype),
-             orientation = "y",
-             stat = "identity",
-             pwidth = 0.05) +
-  scale_fill_manual(values = c("Aquilopelagic" = "#e95e50",
-                                "Planktitrophic" = "#f1aa98",
-                                "Rajobenthic" = "#f3b600",
-                                "Rajopelagic" = "#ffda8f",
-                                "Rhinobenthic" = "#3fccbb",
-                                "Torpedobenthic" = "#287271")) +
-  # Propulsion Method
-  new_scale_fill() +
+  # # Ecomorphotype
+  # new_scale_fill() +
+  # geom_fruit(data = rayMeans,
+  #            geom = geom_bar,
+  #            mapping = aes(y = Genus_species, x = 1, 
+  #                          fill = Ecomorphotype),
+  #            orientation = "y",
+  #            stat = "identity",
+  #            pwidth = 0.05) +
+  # scale_fill_manual(values = c("Aquilopelagic" = "#e95e50",
+  #                               "Planktitrophic" = "#f1aa98",
+  #                               "Rajobenthic" = "#f3b600",
+  #                               "Rajopelagic" = "#ffda8f",
+  #                               "Rhinobenthic" = "#3fccbb",
+  #                               "Torpedobenthic" = "#287271")) +
+  # # Propulsion Method
+  # new_scale_fill() +
   geom_fruit(data = rayMeans,
              geom = geom_bar,
              mapping = aes(y = Genus_species, x = 1,
@@ -178,7 +174,7 @@ phyloTreeFull <- phyloTree +
                                "Pectoral Oscillation" = "#b92621",
                                "Pectoral Undulation" = "#e9ba00")) + 
   theme(legend.position = "inside",
-        legend.position.inside = c(0.1, 0.9),
+        legend.position.inside = c(0.1, 0.95),
         legend.title = element_text(size = 14),
         legend.text = element_text(size = 12))
 
