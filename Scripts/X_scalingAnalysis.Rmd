@@ -12,8 +12,10 @@ library(tidyverse)
 # Load broom
 library(broom)
 
-# Load patchwork for plotting
+# Load patchwork, cowplot, and scales for plotting
 library(patchwork)
+library(cowplot)
+library(scales)
 ```
 
 # Load data
@@ -470,12 +472,24 @@ caudalGSHplot <- ggplot(data = logCaudalGSH, aes(x = logTL, y = logGSH_TL)) +
   labs(x = "Total length (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        # Set legend aesthetics
+        legend.direction = "horizontal",
+        legend.title.position = "top", 
+        legend.title = element_text(hjust = 0.5))
 
 caudalGSHplot
 
-ggsave("Results/Figures/caudalGSH.png", caudalGSHplot,
-       width = 12, height = 9)
+# Extract legend
+legend <- get_legend(caudalGSHplot)
+legend <- ggdraw(legend)
+
+# Replot without legend
+caudalGSHplot <- caudalGSHplot +
+  theme(legend.position = "none")
+# Confirm legend does not plot
+caudalGSHplot
 
 # Plot SPL data with lines from model predictions
 caudalSPLplot <- ggplot(data = logCaudalSPL, aes(x = logTL, y = logSPL_TL)) +
@@ -493,12 +507,23 @@ caudalSPLplot <- ggplot(data = logCaudalSPL, aes(x = logTL, y = logSPL_TL)) +
   labs(x = "Total length (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        legend.position = "none")
 
 caudalSPLplot
+```
 
-ggsave("Results/Figures/caudalSPL.png", caudalSPLplot,
-       width = 12, height = 9)
+```{r}
+# Combined plots
+caudal <- (caudalGSHplot + caudalSPLplot) /
+  legend +
+  plot_layout(heights = c(1, 0.08))
+
+caudal
+
+ggsave("Results/Figures/caudalIsometry.png", caudal,
+       width = 16, height = 9)
 ```
 
 Pectoral oscillation.
@@ -540,12 +565,11 @@ oscGSHplot <- ggplot(data = logOscGSH, aes(x = logDW, y = logGSH_DW)) +
   labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        legend.position = "none")
 
 oscGSHplot
-
-ggsave("Results/Figures/oscGSH.png", oscGSHplot,
-       width = 12, height = 9)
 
 # Plot SPL data with lines from model predictions
 oscSPLplot <- ggplot(data = logOscSPL, aes(x = logDW, y = logSPL_DW)) +
@@ -563,12 +587,23 @@ oscSPLplot <- ggplot(data = logOscSPL, aes(x = logDW, y = logSPL_DW)) +
   labs(x = "Disc Width (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        legend.position = "none")
 
 oscSPLplot
+```
 
-ggsave("Results/Figures/oscSPL.png", oscSPLplot,
-       width = 12, height = 9)
+```{r}
+# Combined plots
+osc <- (oscGSHplot + oscSPLplot) /
+  legend +
+  plot_layout(heights = c(1, 0.08))
+
+osc
+
+ggsave("Results/Figures/oscIsometry.png", osc,
+       width = 16, height = 9)
 ```
 
 Pectoral undulation.
@@ -604,18 +639,17 @@ undGSHplot <- ggplot(data = logUndGSH, aes(x = logDW, y = logGSH_DW)) +
   scale_color_manual(values = c("Significant" = "royalblue", 
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
-             ncol = 6) +
+             ncol = 5) +
   scale_x_continuous(labels = function(x) round(10^x, 1)) +
   scale_y_continuous(labels = function(x) round(10^x, 1)) +
   labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        legend.position = "none")
 
 undGSHplot
-
-ggsave("Results/Figures/undGSH.png", undGSHplot,
-       width = 12, height = 9)
 
 # Plot SPL data with lines from model predictions
 undSPLplot <- ggplot(data = logUndSPL, aes(x = logDW, y = logSPL_DW)) +
@@ -627,16 +661,27 @@ undSPLplot <- ggplot(data = logUndSPL, aes(x = logDW, y = logSPL_DW)) +
   scale_color_manual(values = c("Significant" = "royalblue", 
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
-             ncol = 6) +
+             ncol = 5) +
   scale_x_continuous(labels = function(x) round(10^x, 1)) +
   scale_y_continuous(labels = function(x) round(10^x, 1)) +
   labs(x = "Disc width (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"))
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank(),
+        legend.position = "none")
 
 undSPLplot
+```
 
-ggsave("Results/Figures/undSPL.png", undSPLplot,
-       width = 12, height = 9)
+```{r}
+# Combined plots
+und <- (undGSHplot + undSPLplot) /
+  legend +
+  plot_layout(heights = c(1, 0.08))
+
+und
+
+ggsave("Results/Figures/undIsometry.png", und,
+       width = 16, height = 9)
 ```
