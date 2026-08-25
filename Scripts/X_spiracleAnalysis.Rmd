@@ -68,17 +68,36 @@ spiraclePred$predictedSA <- predict(model, newdata = spiraclePred)
 # Plot
 
 ```{r}
-plot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
-  geom_point(alpha = 0.6) +
+allPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
+  geom_line(data = spiraclePred,
+            aes(x = logSPL, y = predictedSA, group = Genus_species),
+            linewidth = 0.5, alpha = 0.2) +
+  geom_point(alpha = 0.3, size = 3) +
+  scale_x_continuous(labels = function(x) format(round(10^x, 1))) +
+  scale_y_continuous(labels = function(y) format(round(10^y, 1))) +
+  labs(x = "Spiracle Length (cm)",
+       y = expression("Spiracle Surface Area (" * cm^2 * ")")) +
+  theme_classic() +
+  theme(legend.position = "none")
+
+allPlot
+
+facetPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
+  geom_point() +
+  geom_line(data = spiraclePred,
+            aes(x = logSPL, y = predictedSA, group = Genus_species),
+            linewidth = 0.5, alpha = 0.2) +
   scale_x_continuous(labels = function(x) 10^x) +
   scale_y_continuous(labels = function(y) 10^y) +
+  facet_wrap(~ Genus_species, scales = "free_x") +
   labs(x = "Spiracle Length (cm)",
        y = expression("Spiracle Surface Area ( " * cm^2 * ")")) +
-  theme_classic()
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"),
+        strip.background = element_blank())
 
-plot
+facetPlot
 
-ggsave("Results/Figures/SPL_SA.png", plot,
-       width = 12, height = 9)
+ggsave("Results/Figures/SPL_SA.png", allPlot,
+       width = 10, height = 10)
 ```
-

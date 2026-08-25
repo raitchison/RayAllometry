@@ -46,9 +46,12 @@ undSpecies <- rayData %>%
 ```{r}
 # Caudal propulsion
 caudalSpecies <- caudalSpecies %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
   # Calculate proportions
-  mutate(SPL_TL = ((SpiracleLength * 10) / TotalLength_CM),
-         GSH_TL = ((GSavg * 10) / TotalLength_CM)) %>%
+  mutate(SPL_TL = SPL_CM / TotalLength_CM,
+         GSH_TL = GSH_CM / TotalLength_CM) %>%
   # Drop rows with NAs in SPL or GSH
   drop_na(SPL_TL, GSH_TL) %>%
   # Remove species with less than 4 individuals
@@ -58,8 +61,12 @@ caudalSpecies <- caudalSpecies %>%
 
 # Pectoral oscillation
 oscSpecies <- oscSpecies %>%
-  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
-         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_DW = SPL_CM / DiscWidth_CM,
+         GSH_DW = GSH_CM / DiscWidth_CM) %>%
   # Drop rows with NAs in SPL or GSH
   drop_na(SPL_DW, GSH_DW) %>%
   # Remove species with less than 4 individuals
@@ -69,8 +76,12 @@ oscSpecies <- oscSpecies %>%
 
 # Pectoral undulation
 undSpecies <- undSpecies %>%
-  mutate(SPL_DW = ((SpiracleLength * 10) / DiscWidth_CM),
-         GSH_DW = ((GSavg * 10) / DiscWidth_CM)) %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_DW = SPL_CM / DiscWidth_CM,
+         GSH_DW = GSH_CM / DiscWidth_CM) %>%
   # Drop rows with NAs in SPL or GSH
   drop_na(SPL_DW, GSH_DW)%>%
   # Remove species with less than 4 individuals
@@ -465,14 +476,15 @@ caudalGSHplot <- ggplot(data = logCaudalGSH, aes(x = logTL, y = logGSH_TL)) +
   geom_point(data = logCaudalGSH, aes(group = Genus_species, color = Significance)) +
   scale_color_manual(values = c("Significant" = "royalblue", 
                                 "Not Significant" = "grey60")) +
-  facet_wrap(~ Genus_species, scales = "free_x",
-             ncol = 4) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 4) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
   labs(x = "Total length (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         # Set legend aesthetics
         legend.direction = "horizontal",
@@ -502,12 +514,15 @@ caudalSPLplot <- ggplot(data = logCaudalSPL, aes(x = logTL, y = logSPL_TL)) +
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
              ncol = 4) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2),
+                     limits = c(-2.1, -1.2)) +
   labs(x = "Total length (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         legend.position = "none")
 
@@ -518,12 +533,12 @@ caudalSPLplot
 # Combined plots
 caudal <- (caudalGSHplot + caudalSPLplot) /
   legend +
-  plot_layout(heights = c(1, 0.08))
+  plot_layout(heights = c(1, 0.05))
 
 caudal
 
 ggsave("Results/Figures/caudalIsometry.png", caudal,
-       width = 16, height = 9)
+       width = 15, height = 10)
 ```
 
 Pectoral oscillation.
@@ -560,12 +575,14 @@ oscGSHplot <- ggplot(data = logOscGSH, aes(x = logDW, y = logGSH_DW)) +
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
              ncol = 2) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
   labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         legend.position = "none")
 
@@ -582,12 +599,14 @@ oscSPLplot <- ggplot(data = logOscSPL, aes(x = logDW, y = logSPL_DW)) +
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
              ncol = 2) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
   labs(x = "Disc Width (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         legend.position = "none")
 
@@ -598,12 +617,12 @@ oscSPLplot
 # Combined plots
 osc <- (oscGSHplot + oscSPLplot) /
   legend +
-  plot_layout(heights = c(1, 0.08))
+  plot_layout(heights = c(1, 0.05))
 
 osc
 
 ggsave("Results/Figures/oscIsometry.png", osc,
-       width = 16, height = 9)
+       width = 15, height = 10)
 ```
 
 Pectoral undulation.
@@ -640,12 +659,14 @@ undGSHplot <- ggplot(data = logUndGSH, aes(x = logDW, y = logGSH_DW)) +
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
              ncol = 5) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
   labs(x = "Disc Width (cm)",
        y = "Relative gill slit height") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         legend.position = "none")
 
@@ -662,12 +683,14 @@ undSPLplot <- ggplot(data = logUndSPL, aes(x = logDW, y = logSPL_DW)) +
                                 "Not Significant" = "grey60")) +
   facet_wrap(~ Genus_species, scales = "free_x",
              ncol = 5) +
-  scale_x_continuous(labels = function(x) round(10^x, 1)) +
-  scale_y_continuous(labels = function(x) round(10^x, 1)) +
+  scale_x_continuous(labels = function(x) round(10^x)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
   labs(x = "Disc width (cm)",
        y = "Relative spiracle length") +
   theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
+  theme(axis.text = element_text(size = 8),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
         legend.position = "none")
 
@@ -678,10 +701,10 @@ undSPLplot
 # Combined plots
 und <- (undGSHplot + undSPLplot) /
   legend +
-  plot_layout(heights = c(1, 0.08))
+  plot_layout(heights = c(1, 0.03))
 
 und
 
 ggsave("Results/Figures/undIsometry.png", und,
-       width = 16, height = 9)
+       width = 15, height = 10)
 ```
