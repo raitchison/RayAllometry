@@ -538,7 +538,7 @@ caudal <- (caudalGSHplot + caudalSPLplot) /
 caudal
 
 ggsave("Results/Figures/caudalIsometry.png", caudal,
-       width = 15, height = 10)
+       width = 16, height = 10)
 ```
 
 Pectoral oscillation.
@@ -622,7 +622,7 @@ osc <- (oscGSHplot + oscSPLplot) /
 osc
 
 ggsave("Results/Figures/oscIsometry.png", osc,
-       width = 15, height = 10)
+       width = 16, height = 10)
 ```
 
 Pectoral undulation.
@@ -706,5 +706,5 @@ und <- (undGSHplot + undSPLplot) /
 und
 
 ggsave("Results/Figures/undIsometry.png", und,
-       width = 15, height = 10)
+       width = 16, height = 10)
 ```
