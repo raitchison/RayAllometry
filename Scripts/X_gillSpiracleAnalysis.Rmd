@@ -23,6 +23,21 @@ library(patchwork)
 rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
 ```
 
+# Drop NAs and species with < 4 individuals
+
+```{r}
+rayClean <- rayData %>%
+  # Drop rows with NAs in GSH and SPL
+  drop_na(SpiracleLength, GSavg) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+```
+
+
+# Since I don't want to test with proportions...?
+
 # Split data by propulsion method
 
 ```{r}

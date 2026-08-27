@@ -708,3 +708,102 @@ und
 ggsave("Results/Figures/undIsometry.png", und,
        width = 16, height = 10)
 ```
+
+# Supplementary Analysis
+
+
+```{r}
+# Caudal
+caudalSPLp <- logCaudalSPL %>%
+  count(Genus_species, p_val, Significance)
+
+caudalSPL <- ggplot(data = caudalSPLp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Caudal propulsion, SPL") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+caudalSPL
+
+caudalGSHp <- logCaudalGSH %>%
+  count(Genus_species, p_val, Significance)
+
+caudalGSH <- ggplot(data = caudalGSHp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Caudal propulsion, GSH") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+caudalGSH
+
+# Oscillation
+oscSPLp <- logOscSPL %>%
+  count(Genus_species, p_val, Significance)
+
+oscSPL <- ggplot(data = oscSPLp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Pectoral Oscillation, SPL") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+oscSPL
+
+oscGSHp <- logOscGSH %>%
+  count(Genus_species, p_val, Significance)
+
+oscGSH <- ggplot(data = oscGSHp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Pectoral Oscillation, GSH") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+oscGSH
+
+# Undulation
+undSPLp <- logUndSPL %>%
+  count(Genus_species, p_val, Significance)
+
+undSPL <- ggplot(data = undSPLp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Pectoral Undulation, SPL") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+undSPL
+
+undGSHp <- logUndGSH %>%
+  count(Genus_species, p_val, Significance)
+
+undGSH <- ggplot(data = undGSHp, aes(x = n, y = p_val, color = Significance)) +
+  geom_point() +
+  scale_color_manual(values = c("Significant" = "royalblue", 
+                                "Not Significant" = "grey60")) +
+  labs(x = "Number of individuals",
+       y = "p-value",
+       title = "Pectoral Undulation, GSH") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 8))
+
+undGSH
+```
+

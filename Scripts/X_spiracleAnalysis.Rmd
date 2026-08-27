@@ -12,6 +12,9 @@ library(tidyverse)
 # Load broom
 library(broom)
 
+# Load marginaleffects
+library(marginaleffects)
+
 # Load patchwork for plotting
 library(patchwork)
 ```
@@ -101,3 +104,60 @@ facetPlot
 ggsave("Results/Figures/SPL_SA.png", allPlot,
        width = 10, height = 10)
 ```
+
+# Supplementary?
+
+```{r}
+# Differences in slope between species (compared to ref. species)
+# Extract 95% confidence intervals
+tidyModel <- tidy(model, conf.int = TRUE, conf.level = 0.95) %>% 
+  # Retain interaction rows
+  filter(str_detect(term, "logSPL:")) %>%
+  mutate(
+  # Clean up species names
+  Group = str_remove(term, "logSPL:Genus_species"),
+  Group = str_replace_all(Group, "_", " "),
+  # TRUE if 0 is NOT between the lower and upper bounds
+  significant = !(conf.low <= 0 & conf.high >= 0))
+# Plot the coefficients
+ggplot(tidyModel, aes(x = estimate, y = reorder(Group, estimate), 
+                      color = significant)) +
+  # Reference line
+  geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
+  # Plot error bars for each species
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
+                 width = 0) +
+  geom_point(size = 1) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "Difference in Coefficient Estimate",
+       y = "") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(size = 6, face = "italic"),
+        axis.title.x = element_text(size = 8))
+
+# Differences in slope within species (compared to 0)
+# Get slopes and create the color variable
+slopes <- slopes(model, variables = "logSPL", by = "Genus_species") %>% 
+  mutate(
+    # TRUE if 0 is NOT between the lower and upper bounds
+    significant = !(conf.low <= 0 & conf.high >= 0),
+    Genus_species = str_replace_all(Genus_species, "_", " "))
+# Plot
+ggplot(slopes, aes(x = estimate, y = reorder(Genus_species, estimate), 
+                   color = significant)) +
+  geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
+                 width = 0) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "",
+       y = "") +
+  theme_classic() +
+  theme(legend.position = "none",
+        axis.text.y = element_text(size = 6, face = "italic"),
+        axis.title.x = element_text(size = 8))
+```
+
