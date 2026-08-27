@@ -47,3 +47,6 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Fitted model objects - large, and reproducible by re-running the script
+Results/Models/*.RDS
