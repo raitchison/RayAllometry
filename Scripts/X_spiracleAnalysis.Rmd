@@ -89,14 +89,14 @@ model <- brm(logSA ~ scaleSPL +
           data = scaledData,
           data2 = list(matrix = matrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
 summary(model)
 
 # Save brms object
-saveRDS(caudalModel_GSH, "Results/brmsOutputs/spiracle_SA.rds")
+saveRDS(model, "Results/brmsOutputs/spiracle_SA.rds")
 ```
 
 ```{r}
@@ -120,7 +120,7 @@ model_summary <- model_slopes %>%
 ```
 
 ```{r}
-ggplot(model_summary,
+coefPlot <- ggplot(model_summary,
        aes(x = slope, y = reorder(Genus_species, slope), 
            color = significant)) +
   geom_vline(xintercept = 2) +
@@ -135,6 +135,9 @@ ggplot(model_summary,
   theme(axis.text.y = element_text(face = "italic",
                                    size = 6),
         legend.position = "none")
+
+ggsave("Results/Figures/SPL_SA_coef.png", coefPlot,
+       width = 8, height = 10)
 ```
 
 
@@ -147,119 +150,119 @@ ggplot(model_summary,
 
 
 ```{r}
-# Run linear model
-model <- lm(logSA ~  logSPL * Genus_species, data = logData)
-# Show model summary
-summary(model)
-
-# Convert summary to a df
-model_sum <- tidy(model)
-# Export to csv
-write.csv(model_sum, file = "Results/Tables/SPL_SA.csv", 
-          row.names = FALSE)
+# # Run linear model
+# model <- lm(logSA ~  logSPL * Genus_species, data = logData)
+# # Show model summary
+# summary(model)
+# 
+# # Convert summary to a df
+# model_sum <- tidy(model)
+# # Export to csv
+# write.csv(model_sum, file = "Results/Tables/SPL_SA.csv", 
+#           row.names = FALSE)
 ```
 
 
 # Generate predicted data
 
 ```{r}
-# Generate predicted data for smooth lines
-spiraclePred <- logData %>%
-  group_by(Genus_species) %>%
-  reframe(logSPL = seq(min(logSPL), max(logSPL), length.out = 100))
-# Add model predicted values to data frame
-spiraclePred$predictedSA <- predict(model, newdata = spiraclePred)
+# # Generate predicted data for smooth lines
+# spiraclePred <- logData %>%
+#   group_by(Genus_species) %>%
+#   reframe(logSPL = seq(min(logSPL), max(logSPL), length.out = 100))
+# # Add model predicted values to data frame
+# spiraclePred$predictedSA <- predict(model, newdata = spiraclePred)
 ```
 
 # Plot
 
 ```{r}
-allPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
-  geom_line(data = spiraclePred,
-            aes(x = logSPL, y = predictedSA, group = Genus_species),
-            linewidth = 0.5, alpha = 0.2) +
-  geom_point(alpha = 0.3, size = 3) +
-  scale_x_continuous(labels = function(x) format(round(10^x, 1))) +
-  scale_y_continuous(labels = function(y) format(round(10^y, 1))) +
-  labs(x = "Spiracle Length (cm)",
-       y = expression("Spiracle Surface Area (" * cm^2 * ")")) +
-  theme_classic() +
-  theme(legend.position = "none")
-
-allPlot
-
-facetPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
-  geom_point() +
-  geom_line(data = spiraclePred,
-            aes(x = logSPL, y = predictedSA, group = Genus_species),
-            linewidth = 0.5, alpha = 0.2) +
-  scale_x_continuous(labels = function(x) 10^x) +
-  scale_y_continuous(labels = function(y) 10^y) +
-  facet_wrap(~ Genus_species, scales = "free_x") +
-  labs(x = "Spiracle Length (cm)",
-       y = expression("Spiracle Surface Area ( " * cm^2 * ")")) +
-  theme_classic() +
-  theme(strip.text = element_text(face = "italic"),
-        strip.background = element_blank())
-
-facetPlot
-
-ggsave("Results/Figures/SPL_SA.png", allPlot,
-       width = 10, height = 10)
-```
-
-# Supplementary?
-
-```{r}
-# Differences in slope between species (compared to ref. species)
-# Extract 95% confidence intervals
-tidyModel <- tidy(model, conf.int = TRUE, conf.level = 0.95) %>% 
-  # Retain interaction rows
-  filter(str_detect(term, "logSPL:")) %>%
-  mutate(
-  # Clean up species names
-  Group = str_remove(term, "logSPL:Genus_species"),
-  Group = str_replace_all(Group, "_", " "),
-  # TRUE if 0 is NOT between the lower and upper bounds
-  significant = !(conf.low <= 0 & conf.high >= 0))
-# Plot the coefficients
-ggplot(tidyModel, aes(x = estimate, y = reorder(Group, estimate), 
-                      color = significant)) +
-  # Reference line
-  geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
-  # Plot error bars for each species
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
-                 width = 0) +
-  geom_point(size = 1) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = "Difference in Coefficient Estimate",
-       y = "") +
-  theme_classic() +
-  theme(legend.position = "none",
-        axis.text.y = element_text(size = 6, face = "italic"),
-        axis.title.x = element_text(size = 8))
-
-# Differences in slope within species (compared to 0)
-# Get slopes and create the color variable
-slopes <- slopes(model, variables = "logSPL", by = "Genus_species") %>% 
-  mutate(
-    # TRUE if 0 is NOT between the lower and upper bounds
-    significant = !(conf.low <= 0 & conf.high >= 0),
-    Genus_species = str_replace_all(Genus_species, "_", " "))
-# Plot
-ggplot(slopes, aes(x = estimate, y = reorder(Genus_species, estimate), 
-                   color = significant)) +
-  geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
-                 width = 0) +
-  geom_point(size = 2) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = "",
-       y = "") +
-  theme_classic() +
-  theme(legend.position = "none",
-        axis.text.y = element_text(size = 6, face = "italic"),
-        axis.title.x = element_text(size = 8))
+# allPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
+#   geom_line(data = spiraclePred,
+#             aes(x = logSPL, y = predictedSA, group = Genus_species),
+#             linewidth = 0.5, alpha = 0.2) +
+#   geom_point(alpha = 0.3, size = 3) +
+#   scale_x_continuous(labels = function(x) format(round(10^x, 1))) +
+#   scale_y_continuous(labels = function(y) format(round(10^y, 1))) +
+#   labs(x = "Spiracle Length (cm)",
+#        y = expression("Spiracle Surface Area (" * cm^2 * ")")) +
+#   theme_classic() +
+#   theme(legend.position = "none")
+# 
+# allPlot
+# 
+# facetPlot <- ggplot(data = logData, aes(x = logSPL, y = logSA)) +
+#   geom_point() +
+#   geom_line(data = spiraclePred,
+#             aes(x = logSPL, y = predictedSA, group = Genus_species),
+#             linewidth = 0.5, alpha = 0.2) +
+#   scale_x_continuous(labels = function(x) 10^x) +
+#   scale_y_continuous(labels = function(y) 10^y) +
+#   facet_wrap(~ Genus_species, scales = "free_x") +
+#   labs(x = "Spiracle Length (cm)",
+#        y = expression("Spiracle Surface Area ( " * cm^2 * ")")) +
+#   theme_classic() +
+#   theme(strip.text = element_text(face = "italic"),
+#         strip.background = element_blank())
+# 
+# facetPlot
+# 
+# ggsave("Results/Figures/SPL_SA.png", allPlot,
+#        width = 10, height = 10)
+# ```
+# 
+# # Supplementary?
+# 
+# ```{r}
+# # Differences in slope between species (compared to ref. species)
+# # Extract 95% confidence intervals
+# tidyModel <- tidy(model, conf.int = TRUE, conf.level = 0.95) %>% 
+#   # Retain interaction rows
+#   filter(str_detect(term, "logSPL:")) %>%
+#   mutate(
+#   # Clean up species names
+#   Group = str_remove(term, "logSPL:Genus_species"),
+#   Group = str_replace_all(Group, "_", " "),
+#   # TRUE if 0 is NOT between the lower and upper bounds
+#   significant = !(conf.low <= 0 & conf.high >= 0))
+# # Plot the coefficients
+# ggplot(tidyModel, aes(x = estimate, y = reorder(Group, estimate), 
+#                       color = significant)) +
+#   # Reference line
+#   geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
+#   # Plot error bars for each species
+#   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
+#                  width = 0) +
+#   geom_point(size = 1) +
+#   scale_color_manual(values = c("TRUE" = "darkslategray3", 
+#                                 "FALSE" = "darkslategray")) +
+#   labs(x = "Difference in Coefficient Estimate",
+#        y = "") +
+#   theme_classic() +
+#   theme(legend.position = "none",
+#         axis.text.y = element_text(size = 6, face = "italic"),
+#         axis.title.x = element_text(size = 8))
+# 
+# # Differences in slope within species (compared to 0)
+# # Get slopes and create the color variable
+# slopes <- slopes(model, variables = "logSPL", by = "Genus_species") %>% 
+#   mutate(
+#     # TRUE if 0 is NOT between the lower and upper bounds
+#     significant = !(conf.low <= 0 & conf.high >= 0),
+#     Genus_species = str_replace_all(Genus_species, "_", " "))
+# # Plot
+# ggplot(slopes, aes(x = estimate, y = reorder(Genus_species, estimate), 
+#                    color = significant)) +
+#   geom_vline(xintercept = 0, color = "black", linewidth = 0.5) +
+#   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), 
+#                  width = 0) +
+#   geom_point(size = 2) +
+#   scale_color_manual(values = c("TRUE" = "darkslategray3", 
+#                                 "FALSE" = "darkslategray")) +
+#   labs(x = "",
+#        y = "") +
+#   theme_classic() +
+  # theme(legend.position = "none",
+  #       axis.text.y = element_text(size = 6, face = "italic"),
+  #       axis.title.x = element_text(size = 8))
 ```
