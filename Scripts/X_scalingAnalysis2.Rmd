@@ -1,0 +1,762 @@
+---
+title: "X_scalingAnalysis"
+output: html_document
+---
+
+# 1. Load libraries
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Load brms and tidybayes for analysis and interpretation
+library(brms)
+library(tidybayes)
+
+# Load ape, geiger, and phytools for phylogenetic tree wrangling
+library(ape)
+library(geiger)
+library(phytools)
+
+# Load patchwork, cowplot, and scales for plotting
+library(patchwork)
+library(cowplot)
+library(scales)
+```
+
+# 2. Load data
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
+
+# Load phylogenetic trees
+rayTrees <- read.nexus("Data/Data_Processed/PrunedTrimmedTrees.nex")
+```
+
+# 3. Split data by body size metric (TL or DW)
+
+```{r}
+# % Total Length (TL) species
+TLspecies <- rayData %>%
+  filter(Order == "Rajiformes" | 
+           Order == "Rhinopristiformes" | 
+           Order == "Torpediniformes" | 
+           Family == "Urolophidae" |
+           Family == "Urotrygonidae")
+
+# % Disc Width (DW) species
+DWspecies <- rayData %>%
+  filter(Family == "Aetobatidae" |
+          Family == "Dasyatidae" |
+          Family == "Gymnuridae" |
+          Family == "Hexatrygonidae" |
+          Family == "Mobulidae" |
+          Family == "Myliobatidae" |
+          Family == "Plesiobatidae" |
+          Family == "Potamotrygonidae" |
+          Family == "Rhinopteridae")
+```
+
+# 4. Calculate proportional size of spiracles and gills
+
+```{r}
+# TL
+TLprop <- TLspecies %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_TL = SPL_CM / TotalLength_CM,
+         GSH_TL = GSH_CM / TotalLength_CM) %>%
+  # Drop rows with NAs in SPL or GSH
+  drop_na(SPL_TL, GSH_TL) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+
+# DW
+DWprop <- DWspecies %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_DW = SPL_CM / DiscWidth_CM,
+         GSH_DW = GSH_CM / DiscWidth_CM) %>%
+  # Drop rows with NAs in SPL or GSH
+  drop_na(SPL_DW, GSH_DW) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+```
+
+# 5. Prepare phylogenetic trees
+
+```{r}
+# Set the seed for reproducibility
+set.seed(123)
+```
+
+Trim trees to match each division of the dataset.
+
+TL species
+
+```{r}
+# Sample out a single tree
+TLtree <- sample(rayTrees, 1)[[1]]
+
+# View which species are a mismatch between the tree and data
+diffNamesTL <- name.check(TLtree, TLprop, TLprop$Genus_species)
+# (should return a list of species in tree but not in data)
+
+# Keep only tips that are present in the data
+TLtree <- drop.tip(TLtree,
+                   setdiff(TLtree$tip.label, TLprop$Genus_species))
+
+# Check names again (should return "OK")
+diffNamesTL <- name.check(TLtree, TLprop, TLprop$Genus_species)
+
+# Keep only species present in the tree
+TLprop <- TLprop[TLprop$Genus_species %in% TLtree$tip.label, ]
+```
+
+DW species
+
+```{r}
+# Sample out a single tree
+DWtree <- sample(rayTrees, 1)[[1]]
+
+# View which species are a mismatch between the tree and data
+diffNamesDW <- name.check(DWtree, DWprop, DWprop$Genus_species)
+# (should return a list of species in tree but not in data)
+
+# Keep only tips that are present in the data
+DWtree <- drop.tip(DWtree,
+                   setdiff(DWtree$tip.label, DWprop$Genus_species))
+
+# Check names again (should return "OK")
+diffNamesDW <- name.check(DWtree, DWprop, DWprop$Genus_species)
+
+# Keep only species present in the tree
+DWprop <- DWprop[DWprop$Genus_species %in% DWtree$tip.label, ]
+```
+
+# 6. Analyze data with brms
+
+## 6.1 TL species
+
+Prepare data by logging x and y, and centering x
+
+```{r}
+# Log x (body size) and y (GSH and SPL)
+TLlog <- TLprop %>%
+  mutate(logGSH_TL = log10(GSH_TL),
+         logSPL_TL = log10(SPL_TL),
+         logTL = log10(TotalLength_CM))
+```
+
+Create and run brms models, and plot output
+
+### 6.1.1 SPL
+
+```{r}
+# Create variance covariance matrix
+TLmatrix <- ape::vcv(TLtree)
+
+# Scale TL (predictor (x))
+TLscaled <- TLlog %>%
+  # "Scale" by centering only (since testing isometry)
+  mutate(scaleTL = scale(logTL, center = TRUE, scale = FALSE))
+
+# Build and run model
+TL_SPL <- brm(logSPL_TL ~ scaleTL +
+                (1 + scaleTL | gr(Genus_species, cov = TLmatrix)),
+          data = TLscaled,
+          data2 = list(TLmatrix = TLmatrix),
+          family = gaussian,
+          warmup = 3000, iter = 6000,
+          cores = 2, control = list(adapt_delta = 0.95),
+          save_pars = save_pars(all = TRUE))
+
+summary(TL_SPL)
+
+# Save brms object
+saveRDS(TL_SPL, "Results/brmsOutputs/TL_SPL.rds")
+```
+
+```{r}
+# Optional: load brms object if revisiting script
+TL_SPL <- readRDS("Results/brmsOutputs/TL_SPL.rds")
+```
+
+Extract model outputs
+
+```{r}
+TL_SPL_slopes <- TL_SPL %>%
+  # Get "global" posterior draws
+  spread_draws(b_scaleTL,
+    # Get species level posterior draws
+    r_Genus_species[Genus_species, term]) %>%
+  # Filter for slopes (remove Intercept)
+  filter(term == "scaleTL") %>%
+  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
+  mutate(slope = b_scaleTL + r_Genus_species)
+
+# Summarize by species
+TL_SPL_sum <- TL_SPL_slopes %>%
+  median_qi(slope, .width = 0.95) %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
+         # Flag species that deviate from expectations (0)
+         significant = (.lower >=0 | .upper <= 0))
+```
+
+Create coefficient plot
+
+```{r}
+TL_SPL_coef <- ggplot(TL_SPL_sum,
+       aes(x = slope, y = reorder(Genus_species, slope), 
+           color = significant)) +
+  geom_vline(xintercept = 0, color = "grey50") +
+  geom_errorbar(aes(xmin = .lower, xmax = .upper),
+                width = 0) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = NULL,
+        y = NULL) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 8, face = "italic"),
+        legend.position = "none")
+
+ggsave("Results/Figures/TL_SPL_coef .png", TL_SPL_coef ,
+       width = 8, height = 10)
+```
+
+### 6.1.2 GSH
+
+```{r}
+# Build and run model
+TL_GSH <- brm(logGSH_TL ~ scaleTL +
+                     (1 + scaleTL | gr(Genus_species, cov = TLmatrix)),
+          data = TLscaled,
+          data2 = list(TLmatrix = TLmatrix),
+          family = gaussian,
+          warmup = 3000, iter = 6000,
+          cores = 2, control = list(adapt_delta = 0.95),
+          save_pars = save_pars(all = TRUE))
+
+summary(TL_GSH)
+
+# Save brms object
+saveRDS(TL_GSH, "Results/brmsOutputs/TL_GSH.rds")
+```
+
+```{r}
+# Optional: load brms object if revisiting script
+TL_GSH <- readRDS("Results/brmsOutputs/TL_GSH.rds")
+```
+
+Extract model outputs
+
+```{r}
+TL_GSH_slopes <- TL_GSH %>%
+  # Get "global" posterior draws
+  spread_draws(b_scaleTL,
+    # Get species level posterior draws
+    r_Genus_species[Genus_species, term]) %>%
+  # Filter for slopes (remove Intercept)
+  filter(term == "scaleTL") %>%
+  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
+  mutate(slope = b_scaleTL + r_Genus_species)
+
+# Summarize by species
+TL_GSH_sum <- TL_GSH_slopes %>%
+  median_qi(slope, .width = 0.95) %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
+         # Flag species that deviate from expectations
+         significant = (.lower >=0 | .upper <= 0))
+```
+
+Create coefficient plot
+
+```{r}
+TL_GSH_coef <- ggplot(TL_GSH_sum,
+       aes(x = slope, y = reorder(Genus_species, slope),
+           color = significant)) +
+  geom_vline(xintercept = 0, color = "grey50") +
+  geom_errorbar(aes(xmin = .lower, xmax = .upper),
+                width = 0) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = NULL,
+       y = NULL) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 8, face = "italic"),
+        legend.position = "none")
+
+ggsave("Results/Figures/TL_GSH_coef.png", TL_GSH_coef,
+       width = 8, height = 10)
+```
+
+## 6.2 DW species
+
+Prepare data by logging x and y, and centering x
+
+```{r}
+# Log x (body size) and y (GSH and SPL)
+DWlog <- DWprop %>%
+  mutate(logGSH_DW = log10(GSH_DW),
+         logSPL_DW = log10(SPL_DW),
+         logDW = log10(DiscWidth_CM))
+```
+
+Create and run brms models
+
+### 6.2.1 SPL
+
+```{r}
+# Create variance covariance matrix
+DWmatrix <- ape::vcv(DWtree)
+
+# Scale DW (predictor (x))
+DWscaled <- DWlog %>%
+  # "Scale" by centering only (since testing isometry)
+  mutate(scaleDW = scale(logDW, center = TRUE, scale = FALSE))
+
+# Build and run model
+DW_SPL <- brm(logSPL_DW ~ scaleDW +
+                     (1 + scaleDW | gr(Genus_species, cov = DWmatrix)),
+          data = DWscaled,
+          data2 = list(DWmatrix = DWmatrix),
+          family = gaussian,
+          warmup = 3000, iter = 6000,
+          cores = 2, control = list(adapt_delta = 0.95),
+          save_pars = save_pars(all = TRUE))
+
+summary(DW_SPL)
+
+# Save brms object
+saveRDS(DW_SPL, "Results/brmsOutputs/DW_SPL.rds")
+```
+
+```{r}
+# Optional: load brms object if revisiting script
+DW_SPL <- readRDS("Results/brmsOutputs/DW_SPL.rds")
+```
+
+Extract model outputs
+
+```{r}
+DW_SPL_slopes <- DW_SPL %>%
+  # Get "global" posterior draws
+  spread_draws(b_scaleDW,
+    # Get species level posterior draws
+    r_Genus_species[Genus_species, term]) %>%
+  # Filter for slopes (remove Intercept)
+  filter(term == "scaleDW") %>%
+  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
+  mutate(slope = b_scaleDW + r_Genus_species)
+
+# Summarize by species
+DW_SPL_sum <- DW_SPL_slopes %>%
+  median_qi(slope, .width = 0.95) %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
+         # Flag species that deviate from expectations
+         significant = (.lower >=0 | .upper <= 0))
+```
+
+Plot 
+
+```{r}
+DW_SPL_coef <- ggplot(DW_SPL_sum,
+                     aes(x = slope, y = reorder(Genus_species, slope),
+                         color = significant)) +
+  geom_vline(xintercept = 0, color = "grey50") +
+  geom_errorbar(aes(xmin = .lower, xmax = .upper),
+                width = 0) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = NULL,
+        y = NULL) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 8, face = "italic"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_SPL_coef.png", DW_SPL_coef,
+       width = 8, height = 10)
+```
+
+### 6.2.2 GSH
+
+```{r}
+# Build and run model
+DW_GSH <- brm(logGSH_DW ~ scaleDW +
+                     (1 + scaleDW | gr(Genus_species, cov = DWmatrix)),
+          data = DWscaled,
+          data2 = list(DWmatrix = DWmatrix),
+          family = gaussian,
+          warmup = 3000, iter = 6000,
+          cores = 2, control = list(adapt_delta = 0.95),
+          save_pars = save_pars(all = TRUE))
+
+summary(DW_GSH)
+
+# Save brms object
+saveRDS(DW_GSH, "Results/brmsOutputs/DW_GSH.rds")
+```
+
+```{r}
+# Optional: load brms object if revisiting script
+DW_GSH <- readRDS("Results/brmsOutputs/DW_GSH.rds")
+```
+
+Extract model outputs
+
+```{r}
+DW_GSH_slopes <- DW_GSH %>%
+  # Get "global" posterior draws
+  spread_draws(b_scaleDW,
+    # Get species level posterior draws
+    r_Genus_species[Genus_species, term]) %>%
+  # Filter for slopes (remove Intercept)
+  filter(term == "scaleDW") %>%
+  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
+  mutate(slope = b_scaleDW + r_Genus_species)
+
+# Summarize by species
+DW_GSH_sum <- DW_GSH_slopes %>%
+  median_qi(slope, .width = 0.95) %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
+         # Flag species that deviate from expectations
+         significant = (.lower >=0 | .upper <= 0))
+```
+
+Create coefficient plot
+
+```{r}
+DW_GSH_coef <- ggplot(DW_GSH_sum,
+                     aes(x = slope, y = reorder(Genus_species, slope),
+           color = significant)) +
+  geom_vline(xintercept = 0, color = "grey50") +
+  geom_errorbar(aes(xmin = .lower, xmax = .upper),
+                width = 0) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = NULL,
+       y = NULL) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 8, face = "italic"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_GSH_coef.png", DW_GSH_coef,
+       width = 8, height = 10)
+```
+
+# Supplementary Figures
+
+Plot individual species original data with brms model fit
+
+TL species
+
+SPL
+
+```{r}
+# Extract species significance from model summary
+TL_SPL_sig <- TL_SPL_sum %>%
+  select(Genus_species, significant)
+
+# Join significance status
+TLnamed <- TLscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+TLnamed <- TLnamed %>%
+  # Left join significance
+  left_join(TL_SPL_sig, by = "Genus_species")
+```
+
+```{r}
+# Make a prediction grid
+TL_SPL_pred <- TLscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleTL, na.rm = TRUE),
+    max_x = max(scaleTL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
+                         max(TLscaled$scaleTL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
+  select(Genus_species, scaleTL)
+
+# Draw from the posterior
+TL_SPL_preds <- TL_SPL %>%
+  add_epred_draws(newdata = TL_SPL_pred,
+                  ndraws = 100)
+
+# Summarize
+TL_SPL_preds_sum <- TL_SPL_preds %>%
+  group_by(Genus_species, scaleTL) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(TL_SPL_sig, by = "Genus_species")
+```
+
+```{r}
+TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL, 
+                                      color = significant)) +
+  geom_line(data = TL_SPL_preds_sum, aes(x = scaleTL, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "Total Length",
+       y = "Relative Spiracle Length") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/TL_SPL.png", TL_SPL_species,
+       width = 8.5, height = 11)
+```
+
+GSH
+
+```{r}
+# Extract species significance from model summary
+TL_GSH_sig <- TL_GSH_sum %>%
+  select(Genus_species, significant)
+
+# Join significance status
+TLnamed <- TLscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+TLnamed <- TLnamed %>%
+  # Left join significance
+  left_join(TL_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+# Make a prediction grid
+TL_GSH_pred <- TLscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleTL, na.rm = TRUE),
+    max_x = max(scaleTL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
+                         max(TLscaled$scaleTL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
+  select(Genus_species, scaleTL)
+
+# Draw from the posterior
+TL_GSH_preds <- TL_GSH %>%
+  add_epred_draws(newdata = TL_GSH_pred,
+                  ndraws = 100)
+
+# Summarize
+TL_GSH_preds_sum <- TL_GSH_preds %>%
+  group_by(Genus_species, scaleTL) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(TL_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL, 
+                                      color = significant)) +
+  geom_line(data = TL_GSH_preds_sum, aes(x = scaleTL, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "Total Length",
+       y = "Relative Gill Slit Height") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/TL_GSH.png", TL_GSH_species,
+       width = 8.5, height = 11)
+```
+
+DW species
+
+SPL
+
+```{r}
+# Extract species significance from model summary
+DW_SPL_sig <- DW_SPL_sum %>%
+  select(Genus_species, significant)
+
+# Join significance status
+DWnamed <- DWscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+DWnamed <- DWnamed %>%
+  # Left join significance
+  left_join(DW_SPL_sig, by = "Genus_species")
+```
+
+```{r}
+# Make a prediction grid
+DW_SPL_pred <- DWscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleDW, na.rm = TRUE),
+    max_x = max(scaleDW, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
+                         max(DWscaled$scaleDW, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
+  select(Genus_species, scaleDW)
+
+# Draw from the posterior
+DW_SPL_preds <- DW_SPL %>%
+  add_epred_draws(newdata = DW_SPL_pred,
+                  ndraws = 100)
+
+# Summarize
+DW_SPL_preds_sum <- DW_SPL_preds %>%
+  group_by(Genus_species, scaleDW) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(DW_SPL_sig, by = "Genus_species")
+```
+
+```{r}
+DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW, 
+                                      color = significant)) +
+  geom_line(data = DW_SPL_preds_sum, aes(x = scaleDW, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "Disc Width",
+       y = "Relative Spiracle Length") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_SPL.png", DW_SPL_species,
+       width = 8.5, height = 11)
+```
+
+GSH
+
+```{r}
+# Extract species significance from model summary
+DW_GSH_sig <- DW_GSH_sum %>%
+  select(Genus_species, significant)
+
+# Join significance status
+DWnamed <- DWscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+DWnamed <- DWnamed %>%
+  # Left join significance
+  left_join(DW_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+# Make a prediction grid
+DW_GSH_pred <- DWscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleDW, na.rm = TRUE),
+    max_x = max(scaleDW, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
+                         max(DWscaled$scaleDW, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
+  select(Genus_species, scaleDW)
+
+# Draw from the posterior
+DW_GSH_preds <- DW_GSH %>%
+  add_epred_draws(newdata = DW_GSH_pred,
+                  ndraws = 100)
+
+# Summarize
+DW_GSH_preds_sum <- DW_GSH_preds %>%
+  group_by(Genus_species, scaleDW) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(DW_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW, 
+                                      color = significant)) +
+  geom_line(data = DW_GSH_preds_sum, aes(x = scaleDW, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("TRUE" = "darkslategray3", 
+                                "FALSE" = "darkslategray")) +
+  labs(x = "Disc Width",
+       y = "Relative Gill Slit Height") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_GSH.png", DW_GSH_species,
+       width = 8.5, height = 11)
+```
+
+```{r}
+# Determine effect size
+TL_SPL_draws <- as_draws_df(TL_SPL)
+# Calculate effect size
+TL_SPL_draws <- 
+```
+
