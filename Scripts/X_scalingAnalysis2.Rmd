@@ -209,22 +209,38 @@ TL_SPL_sum <- TL_SPL_slopes %>%
   median_qi(slope, .width = 0.95) %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
-         # Flag species that deviate from expectations (0)
-         significant = (.lower >=0 | .upper <= 0))
+  # Flag species that deviate from expectations
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Set order of coefficients
+model_order <- c("Below", "Equal", "Above")
+```
+
+```{r}
+# Order by significance then coefficient
+TL_SPL_sorted <- TL_SPL_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-TL_SPL_coef <- ggplot(TL_SPL_sum,
+TL_SPL_coef <- ggplot(TL_SPL_sorted,
        aes(x = slope, y = reorder(Genus_species, slope), 
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = NULL,
         y = NULL) +
   theme_classic() +
@@ -278,23 +294,34 @@ TL_GSH_sum <- TL_GSH_slopes %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Order by significance then coefficient
+TL_GSH_sorted <- TL_GSH_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-TL_GSH_coef <- ggplot(TL_GSH_sum,
-       aes(x = slope, y = reorder(Genus_species, slope),
+TL_GSH_coef <- ggplot(TL_GSH_sorted,
+       aes(x = slope, y = Genus_species,
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-       y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
@@ -368,23 +395,34 @@ DW_SPL_sum <- DW_SPL_slopes %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
 ```
 
-Plot 
+```{r}
+# Order by significance then coefficient
+DW_SPL_sorted <- DW_SPL_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
+```
+
+Create coefficient plot 
 
 ```{r}
-DW_SPL_coef <- ggplot(DW_SPL_sum,
-                     aes(x = slope, y = reorder(Genus_species, slope),
+DW_SPL_coef <- ggplot(DW_SPL_sorted,
+                     aes(x = slope, y = Genus_species,
                          color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-        y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
@@ -436,23 +474,34 @@ DW_GSH_sum <- DW_GSH_slopes %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Order by significance then coefficient
+DW_GSH_sorted <- DW_GSH_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-DW_GSH_coef <- ggplot(DW_GSH_sum,
-                     aes(x = slope, y = reorder(Genus_species, slope),
+DW_GSH_coef <- ggplot(DW_GSH_sorted,
+                     aes(x = slope, y = Genus_species,
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-       y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
@@ -522,12 +571,13 @@ TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL,
   scale_x_continuous(labels = function(x) round(10^x, 1),
                      breaks = function(x) seq(x[1], x[2], length.out = 3)) +
   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = "Total Length",
        y = "Relative Spiracle Length") +
   theme_classic() +
-  theme(axis.text = element_text(size = 6),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
         # Set facet strip aesthetics
         strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
@@ -593,12 +643,13 @@ TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL,
   scale_x_continuous(labels = function(x) round(10^x, 1),
                      breaks = function(x) seq(x[1], x[2], length.out = 3)) +
   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = "Total Length",
        y = "Relative Gill Slit Height") +
   theme_classic() +
-  theme(axis.text = element_text(size = 6),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
         # Set facet strip aesthetics
         strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
@@ -666,12 +717,13 @@ DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW,
   scale_x_continuous(labels = function(x) round(10^x, 1),
                      breaks = function(x) seq(x[1], x[2], length.out = 3)) +
   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = "Disc Width",
        y = "Relative Spiracle Length") +
   theme_classic() +
-  theme(axis.text = element_text(size = 6),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
         # Set facet strip aesthetics
         strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
@@ -737,12 +789,13 @@ DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW,
   scale_x_continuous(labels = function(x) round(10^x, 1),
                      breaks = function(x) seq(x[1], x[2], length.out = 3)) +
   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = "Disc Width",
        y = "Relative Gill Slit Height") +
   theme_classic() +
-  theme(axis.text = element_text(size = 6),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
         # Set facet strip aesthetics
         strip.text = element_text(face = "italic", size = 8),
         strip.background = element_blank(),
@@ -751,12 +804,5 @@ DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW,
 
 ggsave("Results/Figures/DW_GSH.png", DW_GSH_species,
        width = 8.5, height = 11)
-```
-
-```{r}
-# Determine effect size
-TL_SPL_draws <- as_draws_df(TL_SPL)
-# Calculate effect size
-TL_SPL_draws <- 
 ```
 

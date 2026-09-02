@@ -132,7 +132,6 @@ model_summary <- model_slopes %>%
 model_order <- c("Below", "Equal", "Above")
 ```
 
-
 ```{r}
 # Order by significance then coefficient
 model_sorted <- model_summary %>%
@@ -147,7 +146,6 @@ coefPlot <- ggplot(model_sorted, aes(x = slope, y = Genus_species,
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                  width = 0) +
   geom_point(size = 2.5) +
-  # scale_y_discrete(limits = rev) +
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
