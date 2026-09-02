@@ -34,27 +34,35 @@ rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
 rayTrees <- read.nexus("Data/Data_Processed/PrunedTrimmedTrees.nex")
 ```
 
-# 3. Split data by propulsion method for ease of analysis
+# 3. Split data by body size metric (TL or DW)
 
 ```{r}
-# Caudal propulsion
-caudalSpecies <- rayData %>%
-  filter(PropulsionMethod == "Caudal Propulsion")
+# % Total Length (TL) species
+TLspecies <- rayData %>%
+  filter(Order == "Rajiformes" | 
+           Order == "Rhinopristiformes" | 
+           Order == "Torpediniformes" | 
+           Family == "Urolophidae" |
+           Family == "Urotrygonidae")
 
-# Pectoral oscillation
-oscSpecies <- rayData %>%
-  filter(PropulsionMethod == "Pectoral Oscillation")
-
-# Pectoral undulation
-undSpecies <- rayData %>%
-  filter(PropulsionMethod == "Pectoral Undulation")
+# % Disc Width (DW) species
+DWspecies <- rayData %>%
+  filter(Family == "Aetobatidae" |
+          Family == "Dasyatidae" |
+          Family == "Gymnuridae" |
+          Family == "Hexatrygonidae" |
+          Family == "Mobulidae" |
+          Family == "Myliobatidae" |
+          Family == "Plesiobatidae" |
+          Family == "Potamotrygonidae" |
+          Family == "Rhinopteridae")
 ```
 
 # 4. Calculate proportional size of spiracles and gills
 
 ```{r}
-# Caudal propulsion
-caudalSpecies <- caudalSpecies %>%
+# TL
+TLprop <- TLspecies %>%
   # Convert spiracles and gills to cm
   mutate(SPL_CM = SpiracleLength / 10,
          GSH_CM = GSavg / 10) %>%
@@ -68,8 +76,8 @@ caudalSpecies <- caudalSpecies %>%
   filter(n() > 3) %>%
   ungroup()
 
-# Pectoral oscillation
-oscSpecies <- oscSpecies %>%
+# DW
+DWprop <- DWspecies %>%
   # Convert spiracles and gills to cm
   mutate(SPL_CM = SpiracleLength / 10,
          GSH_CM = GSavg / 10) %>%
@@ -78,21 +86,6 @@ oscSpecies <- oscSpecies %>%
          GSH_DW = GSH_CM / DiscWidth_CM) %>%
   # Drop rows with NAs in SPL or GSH
   drop_na(SPL_DW, GSH_DW) %>%
-  # Remove species with less than 4 individuals
-  group_by(Genus_species) %>%
-  filter(n() > 3) %>%
-  ungroup()
-
-# Pectoral undulation
-undSpecies <- undSpecies %>%
-  # Convert spiracles and gills to cm
-  mutate(SPL_CM = SpiracleLength / 10,
-         GSH_CM = GSavg / 10) %>%
-  # Calculate proportions
-  mutate(SPL_DW = SPL_CM / DiscWidth_CM,
-         GSH_DW = GSH_CM / DiscWidth_CM) %>%
-  # Drop rows with NAs in SPL or GSH
-  drop_na(SPL_DW, GSH_DW)%>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
   filter(n() > 3) %>%
@@ -108,121 +101,100 @@ set.seed(123)
 
 Trim trees to match each division of the dataset.
 
-Caudal species
+TL species
 
 ```{r}
 # Sample out a single tree
-caudalTree <- sample(rayTrees, 1)[[1]]
+TLtree <- sample(rayTrees, 1)[[1]]
 
 # View which species are a mismatch between the tree and data
-diffNamesCaudal <- name.check(caudalTree, caudalSpecies, caudalSpecies$Genus_species)
-# (should return a list of 162 species in tree but not in data)
+diffNamesTL <- name.check(TLtree, TLprop, TLprop$Genus_species)
+# (should return a list of species in tree but not in data)
 
 # Keep only tips that are present in the data
-caudalTree <- drop.tip(caudalTree,
-                        setdiff(caudalTree$tip.label, caudalSpecies$Genus_species))
+TLtree <- drop.tip(TLtree,
+                   setdiff(TLtree$tip.label, TLprop$Genus_species))
 
 # Check names again (should return "OK")
-diffNamesCaudal <- name.check(caudalTree, caudalSpecies, caudalSpecies$Genus_species)
+diffNamesTL <- name.check(TLtree, TLprop, TLprop$Genus_species)
 
 # Keep only species present in the tree
-caudalSpecies <- caudalSpecies[caudalSpecies$Genus_species %in% caudalTree$tip.label, ]
+TLprop <- TLprop[TLprop$Genus_species %in% TLtree$tip.label, ]
 ```
 
-Pectoral oscillators
+DW species
 
 ```{r}
 # Sample out a single tree
-oscTree <- sample(rayTrees, 1)[[1]]
+DWtree <- sample(rayTrees, 1)[[1]]
 
 # View which species are a mismatch between the tree and data
-diffNamesOsc <- name.check(oscTree, oscSpecies, oscSpecies$Genus_species)
-# (should return a list of 190 species in tree but not in data)
+diffNamesDW <- name.check(DWtree, DWprop, DWprop$Genus_species)
+# (should return a list of species in tree but not in data)
 
 # Keep only tips that are present in the data
-oscTree <- drop.tip(oscTree,
-                    setdiff(oscTree$tip.label, oscSpecies$Genus_species))
+DWtree <- drop.tip(DWtree,
+                   setdiff(DWtree$tip.label, DWprop$Genus_species))
 
 # Check names again (should return "OK")
-diffNamesosc <- name.check(oscTree, oscSpecies, oscSpecies$Genus_species)
+diffNamesDW <- name.check(DWtree, DWprop, DWprop$Genus_species)
 
 # Keep only species present in the tree
-oscSpecies <- oscSpecies[oscSpecies$Genus_species %in% oscTree$tip.label, ]
-```
-
-Pectoral undulators
-
-```{r}
-# Sample out a single tree
-undTree <- sample(rayTrees, 1)[[1]]
-
-# View which species are a mismatch between the tree and data
-diffNamesUnd <- name.check(undTree, undSpecies, undSpecies$Genus_species)
-# (should return a list of 141 species in tree but not in data)
-
-# Keep only tips that are present in the data
-undTree <- drop.tip(undTree,
-                    setdiff(undTree$tip.label, undSpecies$Genus_species))
-
-# Check names again (should return "OK")
-diffNamesUnd <- name.check(undTree, undSpecies, undSpecies$Genus_species)
-
-# Keep only species present in the tree
-undSpecies <- undSpecies[undSpecies$Genus_species %in% undTree$tip.label, ]
+DWprop <- DWprop[DWprop$Genus_species %in% DWtree$tip.label, ]
 ```
 
 # 6. Analyze data with brms
 
-## 6.1 Caudal Propulsion
+## 6.1 TL species
 
 Prepare data by logging x and y, and centering x
 
 ```{r}
 # Log x (body size) and y (GSH and SPL)
-logCaudal <- caudalSpecies %>%
+TLlog <- TLprop %>%
   mutate(logGSH_TL = log10(GSH_TL),
          logSPL_TL = log10(SPL_TL),
          logTL = log10(TotalLength_CM))
 ```
 
-Create and run brms models
+Create and run brms models, and plot output
 
 ### 6.1.1 SPL
 
 ```{r}
 # Create variance covariance matrix
-caudalMatrix <- ape::vcv(caudalTree)
+TLmatrix <- ape::vcv(TLtree)
 
 # Scale TL (predictor (x))
-caudalScaled <- logCaudal %>%
+TLscaled <- TLlog %>%
   # "Scale" by centering only (since testing isometry)
   mutate(scaleTL = scale(logTL, center = TRUE, scale = FALSE))
 
 # Build and run model
-caudalModel_SPL <- brm(logSPL_TL ~ scaleTL +
-                     (1 + scaleTL | gr(Genus_species, cov = caudalMatrix)),
-          data = caudalScaled,
-          data2 = list(caudalMatrix = caudalMatrix),
+TL_SPL <- brm(logSPL_TL ~ scaleTL +
+                (1 + scaleTL | gr(Genus_species, cov = TLmatrix)),
+          data = TLscaled,
+          data2 = list(TLmatrix = TLmatrix),
           family = gaussian,
-          warmup = 4000, iter = 8000,
+          warmup = 3000, iter = 6000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
-summary(caudalModel_SPL)
+summary(TL_SPL)
 
 # Save brms object
-saveRDS(caudalModel_SPL, "Results/brmsOutputs/caudalModel_SPL.rds")
+saveRDS(TL_SPL, "Results/brmsOutputs/TL_SPL.rds")
 ```
 
 ```{r}
 # Optional: load brms object if revisiting script
-caudalModel_SPL <- readRDS("Results/brmsOutputs/caudalModel_SPL.rds")
+TL_SPL <- readRDS("Results/brmsOutputs/TL_SPL.rds")
 ```
 
 Extract model outputs
 
 ```{r}
-caudalSPL_slopes <- caudalModel_SPL %>%
+TL_SPL_slopes <- TL_SPL %>%
   # Get "global" posterior draws
   spread_draws(b_scaleTL,
     # Get species level posterior draws
@@ -233,33 +205,49 @@ caudalSPL_slopes <- caudalModel_SPL %>%
   mutate(slope = b_scaleTL + r_Genus_species)
 
 # Summarize by species
-sum_caudalSPL <- caudalSPL_slopes %>%
+TL_SPL_sum <- TL_SPL_slopes %>%
   median_qi(slope, .width = 0.95) %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
-         # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+  # Flag species that deviate from expectations
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Set order of coefficients
+model_order <- c("Below", "Equal", "Above")
+```
+
+```{r}
+# Order by significance then coefficient
+TL_SPL_sorted <- TL_SPL_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-caudalSPLcoef <- ggplot(sum_caudalSPL,
+TL_SPL_coef <- ggplot(TL_SPL_sorted,
        aes(x = slope, y = reorder(Genus_species, slope), 
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
   labs(x = NULL,
         y = NULL) +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
 
-ggsave("Results/Figures/caudalSPL_coef.png", caudalSPLcoef,
+ggsave("Results/Figures/TL_SPL_coef .png", TL_SPL_coef ,
        width = 8, height = 10)
 ```
 
@@ -267,30 +255,30 @@ ggsave("Results/Figures/caudalSPL_coef.png", caudalSPLcoef,
 
 ```{r}
 # Build and run model
-caudalModel_GSH <- brm(logGSH_TL ~ scaleTL +
-                     (1 + scaleTL | gr(Genus_species, cov = caudalMatrix)),
-          data = caudalScaled,
-          data2 = list(caudalMatrix = caudalMatrix),
+TL_GSH <- brm(logGSH_TL ~ scaleTL +
+                     (1 + scaleTL | gr(Genus_species, cov = TLmatrix)),
+          data = TLscaled,
+          data2 = list(TLmatrix = TLmatrix),
           family = gaussian,
-          warmup = 4000, iter = 8000,
+          warmup = 3000, iter = 6000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
-summary(caudalModel_GSH)
+summary(TL_GSH)
 
 # Save brms object
-saveRDS(caudalModel_GSH, "Results/brmsOutputs/caudalModel_GSH.rds")
+saveRDS(TL_GSH, "Results/brmsOutputs/TL_GSH.rds")
 ```
 
 ```{r}
 # Optional: load brms object if revisiting script
-caudalModel_GSH <- readRDS("Results/brmsOutputs/caudalModel_GSH.rds")
+TL_GSH <- readRDS("Results/brmsOutputs/TL_GSH.rds")
 ```
 
 Extract model outputs
 
 ```{r}
-caudalGSH_slopes <- caudalModel_GSH %>%
+TL_GSH_slopes <- TL_GSH %>%
   # Get "global" posterior draws
   spread_draws(b_scaleTL,
     # Get species level posterior draws
@@ -301,43 +289,54 @@ caudalGSH_slopes <- caudalModel_GSH %>%
   mutate(slope = b_scaleTL + r_Genus_species)
 
 # Summarize by species
-sum_caudalGSH <- caudalGSH_slopes %>%
+TL_GSH_sum <- TL_GSH_slopes %>%
   median_qi(slope, .width = 0.95) %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Order by significance then coefficient
+TL_GSH_sorted <- TL_GSH_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-caudalGSHcoef <- ggplot(sum_caudalGSH,
-       aes(x = slope, y = reorder(Genus_species, slope),
+TL_GSH_coef <- ggplot(TL_GSH_sorted,
+       aes(x = slope, y = Genus_species,
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-       y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
 
-ggsave("Results/Figures/caudalGSH_coef.png", caudalGSHcoef,
+ggsave("Results/Figures/TL_GSH_coef.png", TL_GSH_coef,
        width = 8, height = 10)
 ```
 
-## 6.2 Pectoral Oscillation
+## 6.2 DW species
 
 Prepare data by logging x and y, and centering x
 
 ```{r}
 # Log x (body size) and y (GSH and SPL)
-logOsc <- oscSpecies %>%
+DWlog <- DWprop %>%
   mutate(logGSH_DW = log10(GSH_DW),
          logSPL_DW = log10(SPL_DW),
          logDW = log10(DiscWidth_CM))
@@ -349,38 +348,38 @@ Create and run brms models
 
 ```{r}
 # Create variance covariance matrix
-oscMatrix <- ape::vcv(oscTree)
+DWmatrix <- ape::vcv(DWtree)
 
 # Scale DW (predictor (x))
-oscScaled <- logOsc %>%
+DWscaled <- DWlog %>%
   # "Scale" by centering only (since testing isometry)
   mutate(scaleDW = scale(logDW, center = TRUE, scale = FALSE))
 
 # Build and run model
-oscModel_SPL <- brm(logSPL_DW ~ scaleDW +
-                     (1 + scaleDW | gr(Genus_species, cov = oscMatrix)),
-          data = oscScaled,
-          data2 = list(oscMatrix = oscMatrix),
+DW_SPL <- brm(logSPL_DW ~ scaleDW +
+                     (1 + scaleDW | gr(Genus_species, cov = DWmatrix)),
+          data = DWscaled,
+          data2 = list(DWmatrix = DWmatrix),
           family = gaussian,
-          warmup = 4000, iter = 8000,
+          warmup = 3000, iter = 6000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
-summary(oscModel_SPL)
+summary(DW_SPL)
 
 # Save brms object
-saveRDS(oscModel_SPL, "Results/brmsOutputs/oscModel_SPL.rds")
+saveRDS(DW_SPL, "Results/brmsOutputs/DW_SPL.rds")
 ```
 
 ```{r}
 # Optional: load brms object if revisiting script
-oscModel_SPL <- readRDS("Results/brmsOutputs/oscModel_SPL.rds")
+DW_SPL <- readRDS("Results/brmsOutputs/DW_SPL.rds")
 ```
 
 Extract model outputs
 
 ```{r}
-oscSPL_slopes <- oscModel_SPL %>%
+DW_SPL_slopes <- DW_SPL %>%
   # Get "global" posterior draws
   spread_draws(b_scaleDW,
     # Get species level posterior draws
@@ -391,33 +390,44 @@ oscSPL_slopes <- oscModel_SPL %>%
   mutate(slope = b_scaleDW + r_Genus_species)
 
 # Summarize by species
-sum_oscSPL <- oscSPL_slopes %>%
+DW_SPL_sum <- DW_SPL_slopes %>%
   median_qi(slope, .width = 0.95) %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
 ```
 
-Plot 
+```{r}
+# Order by significance then coefficient
+DW_SPL_sorted <- DW_SPL_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
+```
+
+Create coefficient plot 
 
 ```{r}
-oscSPLcoef <- ggplot(sum_oscSPL,
-                     aes(x = slope, y = reorder(Genus_species, slope),
+DW_SPL_coef <- ggplot(DW_SPL_sorted,
+                     aes(x = slope, y = Genus_species,
                          color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-        y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
 
-ggsave("Results/Figures/oscSPL_coef.png", oscSPLcoef,
+ggsave("Results/Figures/DW_SPL_coef.png", DW_SPL_coef,
        width = 8, height = 10)
 ```
 
@@ -425,30 +435,30 @@ ggsave("Results/Figures/oscSPL_coef.png", oscSPLcoef,
 
 ```{r}
 # Build and run model
-oscModel_GSH <- brm(logGSH_DW ~ scaleDW +
-                     (1 + scaleDW | gr(Genus_species, cov = oscMatrix)),
-          data = oscScaled,
-          data2 = list(oscMatrix = oscMatrix),
+DW_GSH <- brm(logGSH_DW ~ scaleDW +
+                     (1 + scaleDW | gr(Genus_species, cov = DWmatrix)),
+          data = DWscaled,
+          data2 = list(DWmatrix = DWmatrix),
           family = gaussian,
-          warmup = 4000, iter = 8000,
+          warmup = 3000, iter = 6000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
-summary(oscModel_GSH)
+summary(DW_GSH)
 
 # Save brms object
-saveRDS(oscModel_GSH, "Results/brmsOutputs/oscModel_GSH.rds")
+saveRDS(DW_GSH, "Results/brmsOutputs/DW_GSH.rds")
 ```
 
 ```{r}
 # Optional: load brms object if revisiting script
-oscModel_GSH <- readRDS("Results/brmsOutputs/oscModel_GSH.rds")
+DW_GSH <- readRDS("Results/brmsOutputs/DW_GSH.rds")
 ```
 
 Extract model outputs
 
 ```{r}
-oscGSH_slopes <- oscModel_GSH %>%
+DW_GSH_slopes <- DW_GSH %>%
   # Get "global" posterior draws
   spread_draws(b_scaleDW,
     # Get species level posterior draws
@@ -459,916 +469,340 @@ oscGSH_slopes <- oscModel_GSH %>%
   mutate(slope = b_scaleDW + r_Genus_species)
 
 # Summarize by species
-sum_oscGSH <- oscGSH_slopes %>%
+DW_GSH_sum <- DW_GSH_slopes %>%
   median_qi(slope, .width = 0.95) %>%
   # Replace _ with "" in species names
   mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
          # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+         significant = case_when(
+           .lower > 0 ~ "Above",
+           .upper < 0 ~ "Below",
+           TRUE       ~ "Equal"))
+```
+
+```{r}
+# Order by significance then coefficient
+DW_GSH_sorted <- DW_GSH_sum %>%
+  arrange(factor(significant, levels = model_order), slope) %>%
+  mutate(Genus_species = fct_inorder(Genus_species))
 ```
 
 Create coefficient plot
 
 ```{r}
-oscGSHcoef <- ggplot(sum_oscGSH,
-                     aes(x = slope, y = reorder(Genus_species, slope),
+DW_GSH_coef <- ggplot(DW_GSH_sorted,
+                     aes(x = slope, y = Genus_species,
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),
                 width = 0) +
   geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-       y = NULL) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "",
+       y = "") +
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
 
-ggsave("Results/Figures/oscGSH_coef.png", oscGSHcoef,
+ggsave("Results/Figures/DW_GSH_coef.png", DW_GSH_coef,
        width = 8, height = 10)
 ```
 
-## 6.3 Pectoral Undulation
+# Supplementary Figures
 
-Prepare data by logging x and y, and centering x
+Plot individual species original data with brms model fit
 
-```{r}
-# Log x (body size) and y (GSH and SPL)
-logUnd <- undSpecies %>%
-  mutate(logGSH_DW = log10(GSH_DW),
-         logSPL_DW = log10(SPL_DW),
-         logDW = log10(DiscWidth_CM))
-```
+TL species
 
-Create and run brms models
-
-### 6.3.1 SPL
+SPL
 
 ```{r}
-# Create variance covariance matrix
-undMatrix <- ape::vcv(undTree)
+# Extract species significance from model summary
+TL_SPL_sig <- TL_SPL_sum %>%
+  select(Genus_species, significant)
 
-# Scale DW (predictor (x))
-undScaled <- logUnd %>%
-  # "Scale" by centering only (since testing isometry)
-  mutate(scaleDW = scale(logDW, center = TRUE, scale = FALSE))
-
-# Build and run model
-undModel_SPL <- brm(logSPL_DW ~ scaleDW +
-                     (1 + scaleDW | gr(Genus_species, cov = undMatrix)),
-          data = undScaled,
-          data2 = list(undMatrix = undMatrix),
-          family = gaussian,
-          warmup = 4000, iter = 8000,
-          cores = 2, control = list(adapt_delta = 0.95),
-          save_pars = save_pars(all = TRUE))
-
-summary(undModel_SPL)
-
-# Save brms object
-saveRDS(undModel_SPL, "Results/brmsOutputs/undModel_SPL.rds")
-```
-
-```{r}
-# Optional: load brms object if revisiting script
-undModel_SPL <- readRDS("Results/brmsOutputs/undModel_SPL.rds")
-```
-
-Extract model outputs
-
-```{r}
-undSPL_slopes <- undModel_SPL %>%
-  # Get "global" posterior draws
-  spread_draws(b_scaleDW,
-    # Get species level posterior draws
-    r_Genus_species[Genus_species, term]) %>%
-  # Filter for slopes (remove Intercept)
-  filter(term == "scaleDW") %>%
-  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
-  mutate(slope = b_scaleDW + r_Genus_species)
-
-# Summarize by species
-sum_undSPL <- undSPL_slopes %>%
-  median_qi(slope, .width = 0.95) %>%
+# Join significance status
+TLnamed <- TLscaled %>%
   # Replace _ with "" in species names
-  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
-         # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+TLnamed <- TLnamed %>%
+  # Left join significance
+  left_join(TL_SPL_sig, by = "Genus_species")
 ```
 
-Create coefficient plot 
+```{r}
+# Make a prediction grid
+TL_SPL_pred <- TLscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleTL, na.rm = TRUE),
+    max_x = max(scaleTL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
+                         max(TLscaled$scaleTL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
+  select(Genus_species, scaleTL)
+
+# Draw from the posterior
+TL_SPL_preds <- TL_SPL %>%
+  add_epred_draws(newdata = TL_SPL_pred,
+                  ndraws = 100)
+
+# Summarize
+TL_SPL_preds_sum <- TL_SPL_preds %>%
+  group_by(Genus_species, scaleTL) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(TL_SPL_sig, by = "Genus_species")
+```
 
 ```{r}
-undSPLcoef <- ggplot(sum_undSPL,
-                     aes(x = slope, y = reorder(Genus_species, slope),
-                         color = significant)) +
-  geom_vline(xintercept = 0, color = "grey50") +
-  geom_errorbar(aes(xmin = .lower, xmax = .upper),
-                width = 0) +
-  geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-        y = NULL) +
+TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL, 
+                                      color = significant)) +
+  geom_line(data = TL_SPL_preds_sum, aes(x = scaleTL, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "Total Length",
+       y = "Relative Spiracle Length") +
   theme_classic() +
-  theme(axis.text.y = element_text(size = 8, face = "italic"),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/undSPL_coef.png", undSPLcoef,
-       width = 8, height = 10)
+ggsave("Results/Figures/TL_SPL.png", TL_SPL_species,
+       width = 8.5, height = 11)
 ```
 
-### 6.3.2 GSH
+GSH
 
 ```{r}
-# Build and run model
-undModel_GSH <- brm(logGSH_DW ~ scaleDW +
-                     (1 + scaleDW | gr(Genus_species, cov = undMatrix)),
-          data = undScaled,
-          data2 = list(undMatrix = undMatrix),
-          family = gaussian,
-          warmup = 4000, iter = 8000,
-          cores = 2, control = list(adapt_delta = 0.95),
-          save_pars = save_pars(all = TRUE))
+# Extract species significance from model summary
+TL_GSH_sig <- TL_GSH_sum %>%
+  select(Genus_species, significant)
 
-summary(undModel_GSH)
-
-# Save brms object
-saveRDS(undModel_GSH, "Results/brmsOutputs/undModel_GSH.rds")
-```
-
-
-```{r}
-# Optional: load brms object if revisiting script
-undModel_GSH <- readRDS("Results/brmsOutputs/undModel_GSH.rds")
-```
-
-Extract model outputs
-
-```{r}
-undGSH_slopes <- undModel_GSH %>%
-  # Get "global" posterior draws
-  spread_draws(b_scaleDW,
-    # Get species level posterior draws
-    r_Genus_species[Genus_species, term]) %>%
-  # Filter for slopes (remove Intercept)
-  filter(term == "scaleDW") %>%
-  # Calculate species' "true" slope (global slope + slope relative to "global" slope)
-  mutate(slope = b_scaleDW + r_Genus_species)
-
-# Summarize by species
-sum_undGSH <- undGSH_slopes %>%
-  median_qi(slope, .width = 0.95) %>%
+# Join significance status
+TLnamed <- TLscaled %>%
   # Replace _ with "" in species names
-  mutate(Genus_species = str_replace_all(Genus_species, "_", " "),
-         # Flag species that deviate from expectations
-         significant = (.lower >=0 | .upper <= 0))
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+TLnamed <- TLnamed %>%
+  # Left join significance
+  left_join(TL_GSH_sig, by = "Genus_species")
 ```
 
-Create coefficient plot
+```{r}
+# Make a prediction grid
+TL_GSH_pred <- TLscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleTL, na.rm = TRUE),
+    max_x = max(scaleTL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
+                         max(TLscaled$scaleTL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
+  select(Genus_species, scaleTL)
+
+# Draw from the posterior
+TL_GSH_preds <- TL_GSH %>%
+  add_epred_draws(newdata = TL_GSH_pred,
+                  ndraws = 100)
+
+# Summarize
+TL_GSH_preds_sum <- TL_GSH_preds %>%
+  group_by(Genus_species, scaleTL) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(TL_GSH_sig, by = "Genus_species")
+```
 
 ```{r}
-undGSHcoef <- ggplot(sum_undGSH,
-                     aes(x = slope, y = reorder(Genus_species, slope),
-           color = significant)) +
-  geom_vline(xintercept = 0, color = "grey50") +
-  geom_errorbar(aes(xmin = .lower, xmax = .upper),
-                width = 0) +
-  geom_point(size = 2.5) +
-  scale_color_manual(values = c("TRUE" = "darkslategray3", 
-                                "FALSE" = "darkslategray")) +
-  labs(x = NULL,
-       y = NULL) +
+TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL, 
+                                      color = significant)) +
+  geom_line(data = TL_GSH_preds_sum, aes(x = scaleTL, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "Total Length",
+       y = "Relative Gill Slit Height") +
   theme_classic() +
-  theme(axis.text.y = element_text(size = 8, face = "italic"),
+  theme(axis.text = element_text(size = 6, color = "grey30"),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/undGSH_coef.png", undGSHcoef,
-       width = 8, height = 10)
+ggsave("Results/Figures/TL_GSH.png", TL_GSH_species,
+       width = 8.5, height = 11)
 ```
 
-# 7. Plot species data with model predictions
+DW species
 
-
+SPL
 
 ```{r}
+# Extract species significance from model summary
+DW_SPL_sig <- DW_SPL_sum %>%
+  select(Genus_species, significant)
 
+# Join significance status
+DWnamed <- DWscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+DWnamed <- DWnamed %>%
+  # Left join significance
+  left_join(DW_SPL_sig, by = "Genus_species")
 ```
-
-
-
-
-
-
-
-###############################################################################
-
-# Old things?
 
 ```{r}
-# # Model TL ~ GSH
-# caudalGSHmodel <- lm(logGSH_TL ~  logTL * Genus_species, data = logCaudal)
-# # View model summary
-# summary(caudalGSHmodel)
-# # Convert summary to a df
-# caudalGSHmodel_sum <- tidy(caudalGSHmodel)
-# # Export to csv
-# write.csv(caudalGSHmodel_sum, file = "Results/Tables/CaudalModelGSH.csv", 
-#           row.names = FALSE)
-# 
-# # Model TL ~ SPL
-# caudalSPLmodel <- lm(logSPL_TL ~ logTL * Genus_species, data = logCaudal)
-# # View model summary
-# summary(caudalSPLmodel)
-# # Convert summary to a df
-# caudalSPLmodel_sum <- tidy(caudalSPLmodel)
-# # Export to csv
-# write.csv(caudalSPLmodel_sum, file = "Results/Tables/CaudalModelSPL.csv", 
-#           row.names = FALSE)
-# ```
-# 
-# ```{r}
-# # GSH
-# # Extract coefficients table
-# caudalGSH_coef <- summary(caudalGSHmodel)$coefficients
-# # "Attach" a significance status to each species
-# caudalGSH_status <- data.frame(Genus_species = unique(logCaudal$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logTL:Genus_species", Genus_species)
-#       if (row_name %in% rownames(caudalGSH_coef)) {
-#         # Get the p-value
-#         caudalGSH_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         caudalGSH_coef["logTL", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# 
-# # SPL
-# # Extract coefficients table
-# caudalSPL_coef <- summary(caudalSPLmodel)$coefficients
-# # "Attach" a significance status to each species
-# caudalSPL_status <- data.frame(Genus_species = unique(logCaudal$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logTL:Genus_species", Genus_species)
-#       if (row_name %in% rownames(caudalSPL_coef)) {
-#         # Get the p-value
-#         caudalSPL_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         caudalSPL_coef["logTL", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# ```
-# 
-# Pectoral Oscillation
-# 
-# ```{r}
-# # Log x (body size) and y (GSH and SPL)
-# logOsc <- oscSpecies %>%
-#   mutate(logGSH_DW = log10(GSH_DW),
-#          logSPL_DW = log10(SPL_DW),
-#          logDW = log10(DiscWidth_CM))
-# 
-# # Model TL ~ GSH
-# oscGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, data = logOsc)
-# # View model summary
-# summary(oscGSHmodel)
-# # Convert summary to a df
-# oscGSHmodel_sum <- tidy(oscGSHmodel)
-# # Export to csv
-# write.csv(oscGSHmodel_sum, file = "Results/Tables/OscillationModelGSH.csv", 
-#           row.names = FALSE)
-# 
-# # Model TL ~ SPL
-# oscSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logOsc)
-# # View model summary
-# summary(oscSPLmodel)
-# # Convert summary to a df
-# oscSPLmodel_sum <- tidy(oscSPLmodel)
-# # Export to csv
-# write.csv(oscSPLmodel_sum, file = "Results/Tables/OscillationModelSPL.csv", 
-#           row.names = FALSE)
-# ```
-# 
-# ```{r}
-# # GSH
-# # Extract coefficients table
-# oscGSH_coef <- summary(oscGSHmodel)$coefficients
-# # "Attach" a significance status to each species
-# oscGSH_status <- data.frame(Genus_species = unique(logOsc$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logDW:Genus_species", Genus_species)
-#       if (row_name %in% rownames(oscGSH_coef)) {
-#         # Get the p-value
-#         oscGSH_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         oscGSH_coef["logDW", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# 
-# # SPL
-# # Extract coefficients table
-# oscSPL_coef <- summary(oscSPLmodel)$coefficients
-# # "Attach" a significance status to each species
-# oscSPL_status <- data.frame(Genus_species = unique(logOsc$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logDW:Genus_species", Genus_species)
-#       if (row_name %in% rownames(oscSPL_coef)) {
-#         # Get the p-value
-#         oscSPL_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         oscSPL_coef["logDW", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# ```
-# 
-# Pectoral Undulation
-# 
-# ```{r}
-# # Log x (body size) and y (GSH and SPL)
-# logUnd <- undSpecies %>%
-#   mutate(logGSH_DW = log10(GSH_DW),
-#          logSPL_DW = log10(SPL_DW),
-#          logDW = log10(DiscWidth_CM))
-# 
-# # Model TL ~ GSH
-# undGSHmodel <- lm(logGSH_DW ~  logDW * Genus_species, data = logUnd)
-# # View model summary
-# summary(undGSHmodel)
-# # Convert summary to a df
-# undGSHmodel_sum <- tidy(undGSHmodel)
-# # Export to csv
-# write.csv(undGSHmodel_sum, file = "Results/Tables/UndulationModelGSH.csv", 
-#           row.names = FALSE)
-# 
-# # Model TL ~ SPL
-# undSPLmodel <- lm(logSPL_DW ~ logDW * Genus_species, data = logUnd)
-# # View model summary
-# summary(undSPLmodel)
-# # Convert summary to a df
-# undSPLmodel_sum <- tidy(undSPLmodel)
-# # Export to csv
-# write.csv(undSPLmodel_sum, file = "Results/Tables/UndulationModelSPL.csv", 
-#           row.names = FALSE)
-# ```
-# 
-# ```{r}
-# # GSH
-# # Extract coefficients table
-# undGSH_coef <- summary(undGSHmodel)$coefficients
-# # "Attach" a significance status to each species
-# undGSH_status <- data.frame(Genus_species = unique(logUnd$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logDW:Genus_species", Genus_species)
-#       if (row_name %in% rownames(undGSH_coef)) {
-#         # Get the p-value
-#         undGSH_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         undGSH_coef["logDW", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# 
-# # SPL
-# # Extract coefficients table
-# undSPL_coef <- summary(undSPLmodel)$coefficients
-# # "Attach" a significance status to each species
-# undSPL_status <- data.frame(Genus_species = unique(logUnd$Genus_species)) %>%
-#   rowwise() %>%
-#   mutate(
-#     # Create column to place p-values for each species
-#     p_val = {
-#       row_name <- paste0("logDW:Genus_species", Genus_species)
-#       if (row_name %in% rownames(undSPL_coef)) {
-#         # Get the p-value
-#         undSPL_coef[row_name, "Pr(>|t|)"]
-#       } else {
-#         # p-value for "reference" species
-#         undSPL_coef["logDW", "Pr(>|t|)"]
-#       }
-#     },
-#     # Classify significance based on p-value of 0.05
-#     Significance = if_else(p_val < 0.05, "Significant", "Not Significant")) %>%
-#   ungroup()
-# ```
-# 
-# # Generate predictions for plotting (instead of geom_smooth from ggplot)
-# 
-# Caudal propulsion.
-# 
-# ```{r}
-# # GSH
-# # Generate predicted data, grouping by species
-# caudalGSHpred <- logCaudal %>%
-#   group_by(Genus_species) %>%
-#   reframe(logTL = seq(min(logTL), max(logTL), length.out = 100))
-# # Add model predicted values to data frame
-# caudalGSHpred$predictedGSH <- predict(caudalGSHmodel, newdata = caudalGSHpred)
-# 
-# # SPL
-# # Generate predicted data for smooth lines
-# caudalSPLpred <- logCaudal %>%
-#   group_by(Genus_species) %>%
-#   reframe(logTL = seq(min(logTL), max(logTL), length.out = 100))
-# # Add model predicted values to data frame
-# caudalSPLpred$predictedSPL <- predict(caudalSPLmodel, newdata = caudalSPLpred)
-# ```
-# 
-# Join the significance status to data
-# 
-# ```{r}
-# # Actual data
-# # GSH
-# logCaudalGSH <- logCaudal %>%
-#   left_join(caudalGSH_status, by = "Genus_species")
-# # SPL
-# logCaudalSPL <- logCaudal %>%
-#   left_join(caudalSPL_status, by = "Genus_species")
-# 
-# # Prediction data
-# # GSH
-# caudalGSHpred <- caudalGSHpred %>%
-#   left_join(caudalGSH_status, by = "Genus_species")
-# # SPL
-# caudalSPLpred <- caudalSPLpred %>%
-#   left_join(caudalSPL_status, by = "Genus_species")
-# ```
-# 
-# Pectoral oscillation.
-# 
-# ```{r}
-# # GSH
-# # Generate predicted data for smooth lines
-# oscGSHpred <- logOsc %>%
-#   group_by(Genus_species) %>%
-#   reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
-# # Add model predicted values to data frame
-# oscGSHpred$predictedGSH <- predict(oscGSHmodel, newdata = oscGSHpred)
-# 
-# # SPL
-# # Generate predicted data for smooth lines
-# oscSPLpred <- logOsc %>%
-#   group_by(Genus_species) %>%
-#   reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
-# # Add model predicted values to data frame
-# oscSPLpred$predictedSPL <- predict(oscSPLmodel, newdata = oscSPLpred)
-# ```
-# 
-# Join the significance status to data
-# 
-# ```{r}
-# # Actual data
-# # GSH
-# logOscGSH <- logOsc %>%
-#   left_join(oscGSH_status, by = "Genus_species")
-# # SPL
-# logOscSPL <- logOsc %>%
-#   left_join(oscSPL_status, by = "Genus_species")
-# 
-# # Predictions
-# # GSH
-# oscGSHpred <- oscGSHpred %>%
-#   left_join(oscGSH_status, by = "Genus_species")
-# # SPL
-# oscSPLpred <- oscSPLpred %>%
-#   left_join(oscSPL_status, by = "Genus_species")
-# ```
-# 
-# Pectoral undulation.
-# 
-# ```{r}
-# # GSH
-# # Generate predicted data for smooth lines
-# undGSHpred <- logUnd %>%
-#   group_by(Genus_species) %>%
-#   reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
-# # Add model predicted values to data frame
-# undGSHpred$predictedGSH <- predict(undGSHmodel, newdata = undGSHpred)
-# 
-# # SPL
-# # Generate predicted data for smooth lines
-# undSPLpred <- logUnd %>%
-#   group_by(Genus_species) %>%
-#   reframe(logDW = seq(min(logDW), max(logDW), length.out = 100))
-# # Add model predicted values to data frame
-# undSPLpred$predictedSPL <- predict(undSPLmodel, newdata = undSPLpred)
-# ```
-# 
-# Join the significance status to data
-# 
-# ```{r}
-# # Actual data
-# # GSH
-# logUndGSH <- logUnd %>%
-#   left_join(undGSH_status, by = "Genus_species")
-# # SPL
-# logUndSPL <- logUnd %>%
-#   left_join(undSPL_status, by = "Genus_species")
-# 
-# # Predictions
-# # GSH
-# undGSHpred <- undGSHpred %>%
-#   left_join(undGSH_status, by = "Genus_species")
-# # SPL
-# undSPLpred <- undSPLpred %>%
-#   left_join(undSPL_status, by = "Genus_species")
-# ```
-# 
-# # Plot results
-# 
-# Caudal propulsion.
-# 
-# ```{r}
-# # Replace _ with " "
-# # Actual data
-# logCaudalGSH <- logCaudalGSH %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# logCaudalSPL <- logCaudalSPL %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # GSH
-# # Predictions
-# caudalGSHpred <- caudalGSHpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # SPL
-# # Predictions
-# caudalSPLpred <- caudalSPLpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# ```
-# 
-# ```{r}
-# # Plot GSH data with lines from model predictions
-# caudalGSHplot <- ggplot(data = logCaudalGSH, aes(x = logTL, y = logGSH_TL)) +
-#   geom_line(data = caudalGSHpred,
-#             aes(x = logTL, y = predictedGSH, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logCaudalGSH, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x", ncol = 4) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-#   labs(x = "Total length (cm)",
-#        y = "Relative gill slit height") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         # Set legend aesthetics
-#         legend.direction = "horizontal",
-#         legend.title.position = "top", 
-#         legend.title = element_text(hjust = 0.5))
-# 
-# caudalGSHplot
-# 
-# # Extract legend
-# legend <- get_legend(caudalGSHplot)
-# legend <- ggdraw(legend)
-# 
-# # Replot without legend
-# caudalGSHplot <- caudalGSHplot +
-#   theme(legend.position = "none")
-# # Confirm legend does not plot
-# caudalGSHplot
-# 
-# # Plot SPL data with lines from model predictions
-# caudalSPLplot <- ggplot(data = logCaudalSPL, aes(x = logTL, y = logSPL_TL)) +
-#   geom_line(data = caudalSPLpred,
-#             aes(x = logTL, y = predictedSPL, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logCaudalSPL, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x",
-#              ncol = 4) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2),
-#                      limits = c(-2.1, -1.2)) +
-#   labs(x = "Total length (cm)",
-#        y = "Relative spiracle length") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         legend.position = "none")
-# 
-# caudalSPLplot
-# ```
-# 
-# ```{r}
-# # Combined plots
-# caudal <- (caudalGSHplot + caudalSPLplot) /
-#   legend +
-#   plot_layout(heights = c(1, 0.05))
-# 
-# caudal
-# 
-# ggsave("Results/Figures/caudalIsometry.png", caudal,
-#        width = 16, height = 10)
-# ```
-# 
-# Pectoral oscillation.
-# 
-# ```{r}
-# # Replace _ with " "
-# # Actual data
-# logOscGSH <- logOscGSH %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# logOscSPL <- logOscSPL %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # GSH
-# # Predictions
-# oscGSHpred <- oscGSHpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # SPL
-# # Predictions
-# oscSPLpred <- oscSPLpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# ```
-# 
-# ```{r}
-# # Plot GSH data with lines from model predictions
-# oscGSHplot <- ggplot(data = logOscGSH, aes(x = logDW, y = logGSH_DW)) +
-#   geom_line(data = oscGSHpred,
-#             aes(x = logDW, y = predictedGSH, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logOscGSH, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x",
-#              ncol = 2) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-#   labs(x = "Disc Width (cm)",
-#        y = "Relative gill slit height") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         legend.position = "none")
-# 
-# oscGSHplot
-# 
-# # Plot SPL data with lines from model predictions
-# oscSPLplot <- ggplot(data = logOscSPL, aes(x = logDW, y = logSPL_DW)) +
-#   geom_line(data = oscSPLpred,
-#             aes(x = logDW, y = predictedSPL, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logOscSPL, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x",
-#              ncol = 2) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-#   labs(x = "Disc Width (cm)",
-#        y = "Relative spiracle length") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         legend.position = "none")
-# 
-# oscSPLplot
-# ```
-# 
-# ```{r}
-# # Combined plots
-# osc <- (oscGSHplot + oscSPLplot) /
-#   legend +
-#   plot_layout(heights = c(1, 0.05))
-# 
-# osc
-# 
-# ggsave("Results/Figures/oscIsometry.png", osc,
-#        width = 16, height = 10)
-# ```
-# 
-# Pectoral undulation.
-# 
-# ```{r}
-# # Replace _ with " "
-# # Actual data
-# logUndGSH <- logUndGSH %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# logUndSPL <- logUndSPL %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # GSH
-# # Predictions
-# undGSHpred <- undGSHpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# 
-# # SPL
-# # Predictions
-# undSPLpred <- undSPLpred %>%
-#   mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
-# ```
-# 
-# ```{r}
-# # Plot GSH data with lines from model predictions
-# undGSHplot <- ggplot(data = logUndGSH, aes(x = logDW, y = logGSH_DW)) +
-#   geom_line(data = undGSHpred,
-#             aes(x = logDW, y = predictedGSH, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logUndGSH, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x",
-#              ncol = 5) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-#   labs(x = "Disc Width (cm)",
-#        y = "Relative gill slit height") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         legend.position = "none")
-# 
-# undGSHplot
-# 
-# # Plot SPL data with lines from model predictions
-# undSPLplot <- ggplot(data = logUndSPL, aes(x = logDW, y = logSPL_DW)) +
-#   geom_line(data = undSPLpred,
-#             aes(x = logDW, y = predictedSPL, group = Genus_species, 
-#                 color = Significance),
-#             linewidth = 0.5) +
-#   geom_point(data = logUndSPL, aes(group = Genus_species, color = Significance)) +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   facet_wrap(~ Genus_species, scales = "free_x",
-#              ncol = 5) +
-#   scale_x_continuous(labels = function(x) round(10^x)) +
-#   scale_y_continuous(labels = function(y) round(10^y, 2)) +
-#   labs(x = "Disc width (cm)",
-#        y = "Relative spiracle length") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8),
-#         # Set facet strip aesthetics
-#         strip.text = element_text(face = "italic", size = 8),
-#         strip.background = element_blank(),
-#         legend.position = "none")
-# 
-# undSPLplot
-# ```
-# 
-# ```{r}
-# # Combined plots
-# und <- (undGSHplot + undSPLplot) /
-#   legend +
-#   plot_layout(heights = c(1, 0.03))
-# 
-# und
-# 
-# ggsave("Results/Figures/undIsometry.png", und,
-#        width = 16, height = 10)
-# ```
-# 
-# # Supplementary Analysis
-# 
-# 
-# ```{r}
-# # Caudal
-# caudalSPLp <- logCaudalSPL %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# caudalSPL <- ggplot(data = caudalSPLp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Caudal propulsion, SPL") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# caudalSPL
-# 
-# caudalGSHp <- logCaudalGSH %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# caudalGSH <- ggplot(data = caudalGSHp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Caudal propulsion, GSH") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# caudalGSH
-# 
-# # Oscillation
-# oscSPLp <- logOscSPL %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# oscSPL <- ggplot(data = oscSPLp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Pectoral Oscillation, SPL") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# oscSPL
-# 
-# oscGSHp <- logOscGSH %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# oscGSH <- ggplot(data = oscGSHp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Pectoral Oscillation, GSH") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# oscGSH
-# 
-# # Undulation
-# undSPLp <- logUndSPL %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# undSPL <- ggplot(data = undSPLp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Pectoral Undulation, SPL") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# undSPL
-# 
-# undGSHp <- logUndGSH %>%
-#   count(Genus_species, p_val, Significance)
-# 
-# undGSH <- ggplot(data = undGSHp, aes(x = n, y = p_val, color = Significance)) +
-#   geom_point() +
-#   scale_color_manual(values = c("Significant" = "royalblue", 
-#                                 "Not Significant" = "grey60")) +
-#   labs(x = "Number of individuals",
-#        y = "p-value",
-#        title = "Pectoral Undulation, GSH") +
-#   theme_classic() +
-#   theme(axis.text = element_text(size = 8))
-# 
-# undGSH
+# Make a prediction grid
+DW_SPL_pred <- DWscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleDW, na.rm = TRUE),
+    max_x = max(scaleDW, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
+                         max(DWscaled$scaleDW, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
+  select(Genus_species, scaleDW)
+
+# Draw from the posterior
+DW_SPL_preds <- DW_SPL %>%
+  add_epred_draws(newdata = DW_SPL_pred,
+                  ndraws = 100)
+
+# Summarize
+DW_SPL_preds_sum <- DW_SPL_preds %>%
+  group_by(Genus_species, scaleDW) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(DW_SPL_sig, by = "Genus_species")
 ```
+
+```{r}
+DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW, 
+                                      color = significant)) +
+  geom_line(data = DW_SPL_preds_sum, aes(x = scaleDW, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "Disc Width",
+       y = "Relative Spiracle Length") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6, color = "grey30"),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_SPL.png", DW_SPL_species,
+       width = 8.5, height = 11)
+```
+
+GSH
+
+```{r}
+# Extract species significance from model summary
+DW_GSH_sig <- DW_GSH_sum %>%
+  select(Genus_species, significant)
+
+# Join significance status
+DWnamed <- DWscaled %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+DWnamed <- DWnamed %>%
+  # Left join significance
+  left_join(DW_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+# Make a prediction grid
+DW_GSH_pred <- DWscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleDW, na.rm = TRUE),
+    max_x = max(scaleDW, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
+                         max(DWscaled$scaleDW, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
+  select(Genus_species, scaleDW)
+
+# Draw from the posterior
+DW_GSH_preds <- DW_GSH %>%
+  add_epred_draws(newdata = DW_GSH_pred,
+                  ndraws = 100)
+
+# Summarize
+DW_GSH_preds_sum <- DW_GSH_preds %>%
+  group_by(Genus_species, scaleDW) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(DW_GSH_sig, by = "Genus_species")
+```
+
+```{r}
+DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW, 
+                                      color = significant)) +
+  geom_line(data = DW_GSH_preds_sum, aes(x = scaleDW, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "Disc Width",
+       y = "Relative Gill Slit Height") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6, color = "grey30"),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/DW_GSH.png", DW_GSH_species,
+       width = 8.5, height = 11)
+```
+
