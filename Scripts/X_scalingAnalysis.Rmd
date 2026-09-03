@@ -176,7 +176,7 @@ TL_SPL <- brm(logSPL_TL ~ scaleTL +
           data = TLscaled,
           data2 = list(TLmatrix = TLmatrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
@@ -260,7 +260,7 @@ TL_GSH <- brm(logGSH_TL ~ scaleTL +
           data = TLscaled,
           data2 = list(TLmatrix = TLmatrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
@@ -361,7 +361,7 @@ DW_SPL <- brm(logSPL_DW ~ scaleDW +
           data = DWscaled,
           data2 = list(DWmatrix = DWmatrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
@@ -440,7 +440,7 @@ DW_GSH <- brm(logGSH_DW ~ scaleDW +
           data = DWscaled,
           data2 = list(DWmatrix = DWmatrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
@@ -805,4 +805,3 @@ DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW,
 ggsave("Results/Figures/DW_GSH.png", DW_GSH_species,
        width = 8.5, height = 11)
 ```
-

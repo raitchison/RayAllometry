@@ -3,37 +3,105 @@ title: "X_gillSpiracleAnalysis"
 output: html_document
 ---
 
-# Load libraries
+# 1. Load libraries
 
 ```{r}
 # Load tidyverse
 library(tidyverse)
 
-# Load broom
-library(broom)
+# Load brms and tidybayes for analysis and interpretation
+library(brms)
+library(tidybayes)
 
-# Load patchwork for plotting
-library(patchwork)
+# Load ape, geiger, and phytools for phylogenetic tree wrangling
+library(ape)
+library(geiger)
+library(phytools)
+
+# Load scales for plotting
+library(scales)
 ```
 
-# Load data
+# 2. Load data
 
 ```{r}
 # Load csv
-rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
+
+# Load phylogenetic trees
+rayTrees <- read.nexus("Data/Data_Processed/PrunedTrimmedTrees.nex")
 ```
 
-# Drop NAs and species with < 4 individuals
-
-```{r}
-rayClean <- rayData %>%
-  # Drop rows with NAs in GSH and SPL
-  drop_na(SpiracleLength, GSavg) %>%
+logData <- rayData %>%
+  mutate(logSA = log10(SpiracleArea),
+         # Convert Spiracle Length (SPL) to cm and log10
+         SPL_cm = SpiracleLength / 10,
+         logSPL = log10(SPL_cm)) %>%
+  # Drop rows with NAs
+  drop_na(logSA, logSPL) %>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
   filter(n() > 3) %>%
   ungroup()
 ```
+
+```{r}
+# Set seed for reproducability
+set.seed(130)
+```
+
+```{r}
+# Sample out a single tree
+tree <- sample(rayTrees, 1)[[1]]
+
+# View which species are a mismatch between the tree and data
+diffNames <- name.check(tree, logData, logData$Genus_species)
+# (should return a list of 141 species in tree but not in data)
+
+# Keep only tips that are present in the data
+tree <- drop.tip(tree,
+                 setdiff(tree$tip.label, logData$Genus_species))
+
+# Check names again (should return "OK")
+diffNames <- name.check(tree, logData, logData$Genus_species)
+
+# Keep only species present in the tree
+logData <- logData[logData$Genus_species %in% tree$tip.label, ]
+```
+
+# Run brms model
+
+```{r}
+# Create variance covariance matrix
+matrix <- ape::vcv(tree)
+
+# Scale spiracle surface area (predictor (x))
+scaledData <- logData %>%
+  # "Scale" by centering only (since testing allometry)
+  mutate(scaleSPL = scale(logSPL, center = TRUE, scale = FALSE))
+
+# Build and run model
+model <- brm(logSA ~ scaleSPL +
+                     (1 + scaleSPL | gr(Genus_species, cov = matrix)),
+          data = scaledData,
+          data2 = list(matrix = matrix),
+          family = gaussian,
+          warmup = 4000, iter = 8000,
+          cores = 2, control = list(adapt_delta = 0.95),
+          save_pars = save_pars(all = TRUE))
+
+summary(model)
+
+# Save brms object
+saveRDS(model, "Results/brmsOutputs/spiracle_SA.rds")
+```
+
+```{r}
+# Optional: load model if revisting script
+model <- readRDS("Results/brmsOutputs/spiracle_SA.rds")
+```
+
+
 
 
 # Since I don't want to test with proportions...?

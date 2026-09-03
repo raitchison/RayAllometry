@@ -18,8 +18,8 @@ library(ape)
 library(geiger)
 library(phytools)
 
-# Load rphylopic for getting silhouettes
-library(rphylopic)
+# # Load rphylopic for getting silhouettes
+# library(rphylopic)
 ```
 
 # Load data
@@ -89,7 +89,7 @@ model <- brm(logSA ~ scaleSPL +
           data = scaledData,
           data2 = list(matrix = matrix),
           family = gaussian,
-          warmup = 3000, iter = 6000,
+          warmup = 4000, iter = 8000,
           cores = 2, control = list(adapt_delta = 0.95),
           save_pars = save_pars(all = TRUE))
 
