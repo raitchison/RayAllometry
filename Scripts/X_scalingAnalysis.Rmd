@@ -232,7 +232,7 @@ Create coefficient plot
 
 ```{r}
 TL_SPL_coef <- ggplot(TL_SPL_sorted,
-       aes(x = slope, y = reorder(Genus_species, slope), 
+       aes(x = slope, y = Genus_species, 
            color = significant)) +
   geom_vline(xintercept = 0, color = "grey50") +
   geom_errorbar(aes(xmin = .lower, xmax = .upper),

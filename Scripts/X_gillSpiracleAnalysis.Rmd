@@ -32,13 +32,15 @@ rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
 rayTrees <- read.nexus("Data/Data_Processed/PrunedTrimmedTrees.nex")
 ```
 
+# 3. Prepare data for analysis
+
+```{r}
 logData <- rayData %>%
-  mutate(logSA = log10(SpiracleArea),
-         # Convert Spiracle Length (SPL) to cm and log10
-         SPL_cm = SpiracleLength / 10,
-         logSPL = log10(SPL_cm)) %>%
+  # log10 Spiracle Length (SPL) and Gill Slit Height (GSH)
+  mutate(logSPL = log10(SpiracleLength),
+         logGSH = log10(GSavg)) %>%
   # Drop rows with NAs
-  drop_na(logSA, logSPL) %>%
+  drop_na(logSPL, logGSH) %>%
   # Remove species with less than 4 individuals
   group_by(Genus_species) %>%
   filter(n() > 3) %>%
@@ -56,7 +58,7 @@ tree <- sample(rayTrees, 1)[[1]]
 
 # View which species are a mismatch between the tree and data
 diffNames <- name.check(tree, logData, logData$Genus_species)
-# (should return a list of 141 species in tree but not in data)
+# (should return a list of species in tree but not in data)
 
 # Keep only tips that are present in the data
 tree <- drop.tip(tree,
@@ -69,19 +71,19 @@ diffNames <- name.check(tree, logData, logData$Genus_species)
 logData <- logData[logData$Genus_species %in% tree$tip.label, ]
 ```
 
-# Run brms model
+# 4. Analyze with brms
 
 ```{r}
 # Create variance covariance matrix
 matrix <- ape::vcv(tree)
 
-# Scale spiracle surface area (predictor (x))
+# Scale spiracle length (predictor (x))
 scaledData <- logData %>%
-  # "Scale" by centering only (since testing allometry)
+  # "Scale" by centering only
   mutate(scaleSPL = scale(logSPL, center = TRUE, scale = FALSE))
 
 # Build and run model
-model <- brm(logSA ~ scaleSPL +
+model <- brm(logGSH ~ scaleSPL * PropulsionMethod +
                      (1 + scaleSPL | gr(Genus_species, cov = matrix)),
           data = scaledData,
           data2 = list(matrix = matrix),
@@ -93,13 +95,89 @@ model <- brm(logSA ~ scaleSPL +
 summary(model)
 
 # Save brms object
-saveRDS(model, "Results/brmsOutputs/spiracle_SA.rds")
+saveRDS(model, "Results/brmsOutputs/SPL_GSH.rds")
 ```
 
 ```{r}
 # Optional: load model if revisting script
-model <- readRDS("Results/brmsOutputs/spiracle_SA.rds")
+model <- readRDS("Results/brmsOutputs/SPL_GSH.rds")
 ```
+
+# 5. Plot
+
+```{r}
+propulsion_slopes <- model %>%
+  spread_draws(b_scaleSPL,
+               `b_scaleSPL:PropulsionMethodPectoralOscillation`,
+               `b_scaleSPL:PropulsionMethodPectoralUndulation`) %>%
+  mutate(slope_reference = b_scaleSPL,
+         slope_oscillation = b_scaleSPL + `b_scaleSPL:PropulsionMethodPectoralOscillation`,
+         slope_undulation = b_scaleSPL + `b_scaleSPL:PropulsionMethodPectoralUndulation`) %>%
+  select(.draw,
+         slope_reference,
+         slope_oscillation,
+         slope_undulation) %>%
+  pivot_longer(cols = - .draw,
+               names_to = "PropulsionMethod",
+               values_to = "slope") %>%
+  mutate(PropulsionMethod = recode(PropulsionMethod,
+                                   slope_reference = "Caudal Propulsion",
+                                   slope_oscillation = "Pectoral Oscillation",
+                                   slope_undulation = "Pectoral Undulation"))
+```
+
+```{r}
+propulsionPlot <- ggplot(propulsion_slopes, 
+                         aes(x = slope, 
+                             y = fct_rev(fct_reorder(PropulsionMethod, slope, .desc = TRUE)),
+                       fill = PropulsionMethod)) +
+  stat_halfeye(.width = c(0.95), point_interval = mean_qi) +
+  geom_vline(xintercept = 1, color = "grey20", linewidth = 0.5) +
+  scale_fill_manual(values = c("Pectoral Oscillation" = "#f8bc0c",
+                               "Pectoral Undulation" = "#00999e",
+                               "Caudal Propulsion" = "#8e258a")) +
+  labs(x = "",
+       y = "") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+propulsionPlot
+
+ggsave("Results/Figures/GSH_SPL.png", propulsionPlot,
+       width = 8, height = 10)
+```
+
+Plots with species points
+
+```{r}
+
+```
+
+
+```{r}
+raySum <- logData %>%
+  group_by(Genus_species) %>%
+  summarise(
+    N = n(),
+    Family = first(Family), 
+    Order = first(Order)) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  select(Order, Family, Genus_species, N) %>%
+  arrange(Order, Family, Genus_species)
+
+write.csv(raySum, "Data/Data_Processed/SpeciesSummary.csv",
+          row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
