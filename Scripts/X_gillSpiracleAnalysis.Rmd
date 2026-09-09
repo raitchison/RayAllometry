@@ -18,8 +18,8 @@ library(ape)
 library(geiger)
 library(phytools)
 
-# Load scales for plotting
-library(scales)
+# Load rphylopic for plotting
+library(rphylopic)
 ```
 
 # 2. Load data
@@ -124,259 +124,63 @@ propulsion_slopes <- model %>%
                                    slope_reference = "Caudal Propulsion",
                                    slope_oscillation = "Pectoral Oscillation",
                                    slope_undulation = "Pectoral Undulation"))
+
+propulsion_summary <- propulsion_slopes %>%
+  group_by(PropulsionMethod) %>%
+  median_qi(slope, .width = 0.95)
 ```
+
+```{r}
+# Get phylopic images
+caud <- get_phylopic(uuid = "68a96e12-78b2-4b38-a532-1bdfa05a07bc")
+osc <- get_phylopic(uuid = "ebdc09b9-659e-40e7-9323-1ac53d650aa3") %>%
+  rotate_phylopic(angle = -90)
+und <- get_phylopic(uuid = "0596f8ce-e9a5-4481-9982-ad7599fc2cba") %>%
+  rotate_phylopic(angle = -90)
+```
+
 
 ```{r}
 propulsionPlot <- ggplot(propulsion_slopes, 
                          aes(x = slope, 
-                             y = fct_rev(fct_reorder(PropulsionMethod, slope, .desc = TRUE)),
+                             y = fct_rev(fct_reorder(PropulsionMethod, 
+                                                     slope, .desc = TRUE)),
                        fill = PropulsionMethod)) +
-  stat_halfeye(.width = c(0.95), point_interval = mean_qi) +
   geom_vline(xintercept = 1, color = "grey20", linewidth = 0.5) +
-  scale_fill_manual(values = c("Pectoral Oscillation" = "#f8bc0c",
-                               "Pectoral Undulation" = "#00999e",
-                               "Caudal Propulsion" = "#8e258a")) +
+  geom_vline(xintercept = 0, color = "grey90", linewidth = 0.3) +
+  stat_halfeye(.width = c(0.95), point_interval = mean_qi) +
+  scale_fill_manual(values = c("Pectoral Oscillation" = "#f68362",
+                               "Pectoral Undulation" = "#545e82",
+                               "Caudal Propulsion" = "#B7D3F2")) +
+  scale_x_continuous(breaks = -2:3) +
   labs(x = "",
        y = "") +
+  annotate("text", x = -1, y = 3.4, label = "Pectoral Oscillation", 
+           size = 5, color = "#f68362") +
+  annotate("text", x = 1.21, y = 2.95, label = "1.21", 
+           size = 4, color = "#f68362") +
+  annotate("text", x = -1, y = 2.4, label = "Caudal Propulsion", 
+           size = 5, color = "#B7D3F2") +
+  annotate("text", x = 0.85, y = 1.95, label = "0.85", 
+           size = 4, color = "#B7D3F2") +
+    annotate("text", x = -1, y = 1.4, label = "Pectoral Undulation", 
+           size = 5, color = "#545e82") +
+  annotate("text", x = 0.84, y = 0.95, label = "0.84", 
+           size = 4, color = "#545e82") +
+  add_phylopic(x = -1, y = 3.7, img = osc, height = 0.4,
+               fill = "#f68362") +
+  add_phylopic(x = -1, y = 2.65, img = caud, height = 0.3,
+               fill = "#B7D3F2") +
+  add_phylopic(x = -1, y = 1.65, img = und, height = 0.3,
+               fill = "#545e82") +
   theme_classic() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()
+        )
 
 propulsionPlot
 
 ggsave("Results/Figures/GSH_SPL.png", propulsionPlot,
        width = 8, height = 10)
-```
-
-Plots with species points
-
-```{r}
-
-```
-
-
-```{r}
-raySum <- logData %>%
-  group_by(Genus_species) %>%
-  summarise(
-    N = n(),
-    Family = first(Family), 
-    Order = first(Order)) %>%
-  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
-  select(Order, Family, Genus_species, N) %>%
-  arrange(Order, Family, Genus_species)
-
-write.csv(raySum, "Data/Data_Processed/SpeciesSummary.csv",
-          row.names = FALSE)
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Since I don't want to test with proportions...?
-
-# Split data by propulsion method
-
-```{r}
-# Caudal propulsion
-caudalSpecies <- rayData %>%
-  filter(PropulsionMethod == "Caudal Propulsion")
-
-# Pectoral oscillation
-oscSpecies <- rayData %>%
-  filter(PropulsionMethod == "Pectoral Oscillation")
-
-# Pectoral undulation
-undSpecies <- rayData %>%
-  filter(PropulsionMethod == "Pectoral Undulation")
-```
-
-# Drop NAs and species with < 4 individuals
-
-```{r}
-# Caudal propulsion
-caudalSpecies <- caudalSpecies %>%
-  # Drop rows with NAs in GSH and SPL
-  drop_na(SpiracleLength, GSavg) %>%
-  # Remove species with less than 4 individuals
-  group_by(Genus_species) %>%
-  filter(n() > 3) %>%
-  ungroup()
-
-# Pectoral oscillation
-oscSpecies <- oscSpecies %>%
-  # Drop rows with NAs in GSH and SPL
-  drop_na(SpiracleLength, GSavg) %>%
-  # Remove species with less than 4 individuals
-  group_by(Genus_species) %>%
-  filter(n() > 3) %>%
-  ungroup()
-
-# Pectoral undulation
-undSpecies <- undSpecies %>%
-  # Drop rows with NAs in GSH and SPL
-  drop_na(SpiracleLength, GSavg)%>%
-  # Remove species with less than 4 individuals
-  group_by(Genus_species) %>%
-  filter(n() > 3) %>%
-  ungroup()
-```
-
-# Analyze data
-
-Caudal Propulsion
-
-```{r}
-# Log x (GSH), y (SPL), and z (body size)
-logCaudal <- caudalSpecies %>%
-  mutate(logGSH = log10(GSavg),
-         logSPL = log10(SpiracleLength),
-         logTL = log10(TotalLength_CM)) %>%
-  # Center x (GSH) and z (body size)
-  mutate(scaleSPL = scale(logSPL, center = TRUE, scale = FALSE),
-         scaleTL = scale(logTL, center = TRUE, scale = FALSE))
-
-# Model SPL ~ GSH * Species * TL
-caudalModel <- lm(logGSH ~  scaleSPL * Genus_species,
-                  data = logCaudal)
-
-summary(caudalModel)
-```
-
-Pectoral Oscillation
-
-```{r}
-# Log x (SPL), y (GSH), and z (body size)
-logOsc <- oscSpecies %>%
-  mutate(logGSH = log10(GSavg),
-         logSPL = log10(SpiracleLength),
-         logDW = log10(DiscWidth_CM)) %>%
-  # Center x (SPL) and z (body size)
-  mutate(scaleSPL = scale(logSPL, center = TRUE, scale = FALSE),
-         scaleDW = scale(logDW, center = TRUE, scale = FALSE))
-
-# Model GSH ~ SPL
-oscModel <- lm(logGSH ~  scaleSPL * Genus_species, data = logOsc)
-
-summary(oscModel)
-```
-
-Pectoral Undulation
-
-```{r}
-# Log x (GSH), y (SPL), and z (body size)
-logUnd <- undSpecies %>%
-  mutate(logGSH = log10(GSavg),
-         logSPL = log10(SpiracleLength),
-         logDW = log10(DiscWidth_CM)) %>%
-  # Center x (SPL) and z (body size)
-  mutate(scaleSPL = scale(logSPL, center = TRUE, scale = FALSE),
-         scaleDW = scale(logDW, center = TRUE, scale = FALSE))
-
-# Model GSH ~ SPL
-undModel <- lm(logGSH ~  scaleSPL * Genus_species, data = logUnd)
-
-summary(undModel)
-```
-
-# Calculate confidence intervals
-
-```{r}
-# Caudal propulsion
-caudalConf <- confint(caudalModel, level = 0.95)
-
-# Pectoral oscillation
-oscConf <- confint(oscModel, level = 0.95)
-
-# Pectoral undulation
-undConf <- confint(undModel, level = 0.95)
-```
-
-# Plot
-
-# Caudal propulsion
-
-```{r}
-caudalPlot <- ggplot(data = logCaudal, aes(x = scaleSPL, y = logGSH,
-                                    color = Family)) +
-  geom_point() +
-  scale_color_manual(values = c("Glaucostegidae" = "#130032",
-                                "Pristidae" = "#492268",
-                                "Rhinidae" = "#5f2c88",
-                                "Rhinobatidae" = "#a26acf",
-                                "Trygonorrhinidae" = "#bc94dc",
-                                "Zanobatidae" = "#e3d1f0",
-                                "Narcinidae" = "#de6b00",
-                                "Narkidae" = "#d5a702",
-                                "Torpedinidae" = "#ffdd00")) +
-  facet_wrap(~ Genus_species, scales = "free") +
-  labs(x = "Spiracle length (mm)",
-       y = "Gill slit height (mm)") +
-  theme_classic() +
-  theme()
-
-caudalPlot
-
-ggsave("Results/Figures/caudalGSH_SPL.png", caudalPlot,
-       width = 16, height = 9)
-```
-
-# Pectoral oscillation
-
-```{r}
-oscPlot <- ggplot(data = logOsc, aes(x = scaleSPL, y = logGSH,
-                                    color = Family)) +
-  geom_point() +
-  scale_color_manual(values = c("Myliobatidae" = "#C4203A",
-                                "Rhinopteridae" = "#ED909F")) +
-  facet_wrap(~ Genus_species, scales = "free") +
-  labs(x = "Spiracle length (mm)",
-       y = "Gill slit height (mm)") +
-  theme_classic() +
-  theme()
-
-oscPlot
-
-ggsave("Results/Figures/oscGSH_SPL.png", oscPlot,
-       width = 16, height = 9)
-```
-
-# Pectoral undulation
-
-```{r}
-undPlot <- ggplot(data = logUnd, aes(x = scaleSPL, y = logGSH,
-                                    color = Family)) +
-  geom_point() +
-  scale_color_manual(values = c(# Rajiformes
-                                "Anacanthobatidae" = "#023e8a",
-                                "Arhynchobatidae" = "#0077b6",
-                                "Gurgesiellidae" = "#00b4d8",
-                                "Rajidae" = "#ade8f4",
-                                # Myliobatiformes
-                                "Dasyatidae" = "#570e1a",
-                                "Gymnuridae" = "#761323",
-                                "Hexatrygonidae" = "#8a1729",
-                                "Plesiobatidae" = "#DF3853",
-                                "Potamotrygonidae" = "#E66479",
-                                "Urolophidae" = "#F4BCC5",
-                                "Urotrygonidae" = "#f9dce0")) +
-  facet_wrap(~ Genus_species, scales = "free") +
-  labs(x = "Spiracle length (mm)",
-       y = "Gill slit height (mm)") +
-  theme_classic() +
-  theme()
-
-undPlot
-
-ggsave("Results/Figures/undGSH_SPL.png", undPlot,
-       width = 16, height = 9)
 ```

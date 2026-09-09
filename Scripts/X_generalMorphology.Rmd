@@ -1,0 +1,112 @@
+---
+title: "X_generalMorphology"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# Load csv
+rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
+```
+
+Process
+
+```{r}
+logData <- rayData %>%
+  # Drop rows with NAs
+  drop_na(SpiracleLength, GSavg) %>%
+  # log10 Spiracle Length (SPL) and Gill Slit Height (GSH)
+  mutate(logSPL = log10(SpiracleLength),
+         logGSH = log10(GSavg)) %>%
+  # Drop rows with NAs
+  drop_na(logSPL, logGSH) %>%
+  # Remove species with less than 4 individuals
+  group_by(Genus_species) %>%
+  filter(n() > 3) %>%
+  ungroup()
+```
+
+Summarize data
+
+```{r}
+raySum <- logData %>%
+  group_by(Genus_species) %>%
+  summarise(
+    N = n(),
+    Family = first(Family), 
+    Order = first(Order)) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  select(Order, Family, Genus_species, N) %>%
+  arrange(Order, Family, Genus_species)
+
+write.csv(raySum, "Data/Data_Processed/SpeciesSummary.csv",
+          row.names = FALSE)
+```
+
+Mean per species
+
+```{r}
+# Split data set to calculate proportions
+# % Total Length (TL) species
+TLspecies <- logData %>%
+  filter(Order == "Rajiformes" | 
+           Order == "Rhinopristiformes" | 
+           Order == "Torpediniformes" | 
+           Family == "Urolophidae" |
+           Family == "Urotrygonidae")
+
+# % Disc Width (DW) species
+DWspecies <- logData %>%
+  filter(Family == "Aetobatidae" |
+          Family == "Dasyatidae" |
+          Family == "Gymnuridae" |
+          Family == "Hexatrygonidae" |
+          Family == "Mobulidae" |
+          Family == "Myliobatidae" |
+          Family == "Plesiobatidae" |
+          Family == "Potamotrygonidae" |
+          Family == "Rhinopteridae")
+```
+
+Calculate means
+
+```{r}
+# TL species
+TLmeans <- TLspecies %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_TL = SPL_CM / TotalLength_CM,
+         SPL_percTL = SPL_TL * 100,
+         GSH_TL = GSH_CM / TotalLength_CM,
+         GSH_percTL = GSH_TL * 100) %>%
+  # Group by species
+  group_by(Genus_species) %>%
+  # Calculate species means
+  summarise(meanSPL = mean(SPL_TL),
+            meanSPLperc = mean(SPL_percTL),
+            meanGSH = mean(GSH_TL),
+            meanGSHperc = mean(GSH_percTL))
+
+# DW species
+DWmeans <- DWspecies %>%
+  # Convert spiracles and gills to cm
+  mutate(SPL_CM = SpiracleLength / 10,
+         GSH_CM = GSavg / 10) %>%
+  # Calculate proportions
+  mutate(SPL_DW = SPL_CM / DiscWidth_CM,
+         SPL_percDW = SPL_DW * 100,
+         GSH_DW = GSH_CM / DiscWidth_CM,
+         GSH_percDW = GSH_DW * 100) %>%
+  # Group by species
+  group_by(Genus_species) %>%
+  # Calculate species means
+  summarise(meanSPL = mean(SPL_DW),
+            meanSPLperc = mean(SPL_percDW),
+            meanGSH = mean(GSH_DW),
+            meanGSHperc = mean(GSH_percDW))
+```

@@ -26,7 +26,7 @@ library(phytools)
 
 ```{r}
 # Load csv
-rayData <- read.csv("Data/Data_Tidy/allMuseumRayData.csv")
+rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
 
 # Load phylogenetic trees
 rayTrees <- read.nexus("Data/Data_Processed/PrunedTrimmedTrees.nex")
