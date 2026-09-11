@@ -17,9 +17,6 @@ library(tidybayes)
 library(ape)
 library(geiger)
 library(phytools)
-
-# # Load rphylopic for getting silhouettes
-# library(rphylopic)
 ```
 
 # Load data
@@ -160,6 +157,75 @@ ggsave("Results/Figures/SPL_SA_coef.png", coefPlot,
        width = 8, height = 10)
 ```
 
+# Facet plot
+
+```{r}
+# Make a prediction grid
+indPredict <- scaledData %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleSPL, na.rm = TRUE),
+    max_x = max(scaleSPL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleSPL = seq(min(scaledData$scaleSPL, na.rm = TRUE),
+                         max(scaledData$scaleSPL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleSPL >= min_x, scaleSPL <= max_x) %>%
+  select(Genus_species, scaleSPL)
+
+# Draw from the posterior
+SA_preds <- model %>%
+  add_epred_draws(newdata = indPredict,
+                  ndraws = 100)
+
+# Summarize
+SA_preds_sum <- SA_preds %>%
+  group_by(Genus_species, scaleSPL) %>%
+  median_qi(.epred, .width = 0.95) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  # Left join significance
+  left_join(model_summary, by = "Genus_species")
+```
+
+```{r}
+# Join significance status
+namedData <- scaledData %>%
+  # Replace _ with "" in species names
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " "))
+
+namedData <- namedData %>%
+  # Left join significance
+  left_join(model_summary, by = "Genus_species")
+```
+
+
+```{r}
+indPlot <- ggplot(namedData, aes(x = scaleSPL, y = logSA, 
+                               color = significant)) +
+  geom_line(data = SA_preds_sum, aes(x = scaleSPL, y = .epred,
+                                         color = significant), linewidth = 0.5) +
+  geom_point() +
+  facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
+  scale_x_continuous(labels = function(x) round(10^x, 1),
+                     breaks = function(x) seq(x[1], x[2], length.out = 3)) +
+  scale_y_continuous(labels = function(y) round(10^y, 2)) +
+  scale_color_manual(values = c("Above" = "#008080",
+                                "Equal" = "grey80",
+                                "Below" = "#ca562c")) +
+  labs(x = "Spiracle Length",
+       y = "Spiracle Surface Area") +
+  theme_classic() +
+  theme(axis.text = element_text(size = 6, color = "grey30"),
+        # Set facet strip aesthetics
+        strip.text = element_text(face = "italic", size = 8),
+        strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        legend.position = "none")
+
+ggsave("Results/Figures/SPL_SA_individual.png", indPlot,
+       width = 8.5, height = 11)
+```
+
 # Plot species
 
 ```{r}
@@ -242,17 +308,6 @@ global_predictions <- grid_data %>%
 ```
 
 ```{r}
-# # phylopic silhouttes
-# # Get images from rphylopic
-# # Narcinidae
-# narcIMG <- get_phylopic(uuid = "a3b3e80c-22f2-4b8f-a3ac-42fe1583e0be")
-# # Rajidae
-# arhynchIMG <- get_phylopic(uuid = "ebb5331d-1802-4fd9-a30a-a27242b1cfb4")
-# arhynchIMG <- rotate_phylopic(arhynchIMG, angle = 90)
-```
-
-
-```{r}
 spPlot <- ggplot(data = scaledData, aes(x = scaleSPL, y = logSA, color = Family)) +
   geom_line(data = global_predictions, aes(x = scaleSPL, y = .epred), color = "grey40",
             linewidth = 1) +
@@ -266,29 +321,31 @@ spPlot <- ggplot(data = scaledData, aes(x = scaleSPL, y = logSA, color = Family)
   labs(x = "Spiracle Length (cm)",
        y = expression("Spiracle Surface Area (" * cm^2 * ")")) +
   theme_classic() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.text = element_text(size = 12))
 
 labelPlot <- spPlot +
-  annotate("text", x = -0.6, y = -1.95, label = "Interspecies Relationship (slope = 1.94)", 
-           size = 4, color = "grey40") +
+  annotate("text", x = -0.6, y = -1.95, 
+           label = "Interspecies Relationship (slope = 1.94)", 
+           size = 4.2, color = "grey40") +
   # Torpediniformes
-  annotate("text", x = -0.86, y = -1.23, label = "Spottail Sleeper Ray", 
-           size = 4.3, color = "#fcc602") +
-  annotate("text", x = -0.86, y = -1.29, label = "Narke dipterygia", 
+  annotate("text", x = -0.86, y = -1.21, label = "Spottail Sleeper Ray", 
+           size = 4.5, color = "#fcc602") +
+  annotate("text", x = -0.86, y = -1.27, label = "Narke dipterygia", 
            size = 4, fontface = "italic", color = "#fcc602") +
   # Rhinopristiformes
   annotate("text", x = 0.25, y = 1.06, label = "Bowmouth Guitarfish", 
-           size = 4.3, color = "#652f90") +
+           size = 4.5, color = "#652f90") +
   annotate("text", x = 0.25, y = 1, label = "Rhina ancylostomus", 
            size = 4, fontface = "italic", color = "#652f90") +
   # Rajiformes
   annotate("text", x = -0.42, y = -1.35, label = "Spotted Legskate", 
-           size = 4.3, color = "#023e8a") +
+           size = 4.5, color = "#023e8a") +
   annotate("text", x = -0.42, y = -1.41, label = "Anacanthobatis marmorata", 
            size = 4, fontface = "italic", color = "#023e8a") +
   # Myliobatiformes
   annotate("text", x = 0.7, y = 0.55, label = "Common Eagle Ray", 
-           size = 4.3, color = "#C4203A") +
+           size = 4.5, color = "#C4203A") +
   annotate("text", x = 0.7, y = 0.49, label = "Myliobatis aquila", 
            size = 4, fontface = "italic", color = "#C4203A")
 
@@ -296,15 +353,3 @@ labelPlot
 
 ggsave("Results/Figures/SPL_SA.png", labelPlot, width = 10, height = 10)
 ```
-
-
-```{r}
-# silPlot <- labelPlot +
-#   add_phylopic(x = -0.4, y = -0.25, img = narcIMG, height = 0.22,
-#                fill = "#ff7b00") +
-#   add_phylopic(x = 0, y = -0.5, img = arhynchIMG, height = 0.22,
-#                fill = "#0077b6")
-# 
-# silPlot
-```
-
