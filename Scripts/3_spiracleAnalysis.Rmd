@@ -153,25 +153,30 @@ coefPlot <- ggplot(model_sorted, aes(x = slope, y = Genus_species,
                                    size = 6),
         legend.position = "none")
 
-ggsave("Results/Figures/SPL_SA_coef.png", coefPlot,
+ggsave("Results/Figures/FigureS1.png", coefPlot,
        width = 8, height = 10)
 ```
 
 # Facet plot
 
 ```{r}
+# Get the global mean used for centering
+SPL_mean <- mean(scaledData$logSPL)
+
 # Make a prediction grid
 indPredict <- scaledData %>%
   group_by(Genus_species) %>%
   summarise(
-    min_x = min(scaleSPL, na.rm = TRUE),
-    max_x = max(scaleSPL, na.rm = TRUE),
+    min_x = min(logSPL, na.rm = TRUE),
+    max_x = max(logSPL, na.rm = TRUE),
     .groups = "drop") %>%
-  crossing(scaleSPL = seq(min(scaledData$scaleSPL, na.rm = TRUE),
-                         max(scaledData$scaleSPL, na.rm = TRUE),
-                         length.out = 100)) %>%
-  filter(scaleSPL >= min_x, scaleSPL <= max_x) %>%
-  select(Genus_species, scaleSPL)
+  crossing(logSPL = seq(min(scaledData$logSPL, na.rm = TRUE),
+                        max(scaledData$logSPL, na.rm = TRUE),
+                        length.out = 100)) %>%
+  filter(logSPL >= min_x, logSPL <= max_x) %>%
+  # Recreate scaleDW by centering so it can be "found"
+  mutate(scaleSPL = logSPL - SPL_mean) %>%
+  select(Genus_species, logSPL, scaleSPL)
 
 # Draw from the posterior
 SA_preds <- model %>%
@@ -180,7 +185,7 @@ SA_preds <- model %>%
 
 # Summarize
 SA_preds_sum <- SA_preds %>%
-  group_by(Genus_species, scaleSPL) %>%
+  group_by(Genus_species, logSPL) %>%
   median_qi(.epred, .width = 0.95) %>%
   mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
   # Left join significance
@@ -200,9 +205,9 @@ namedData <- namedData %>%
 
 
 ```{r}
-indPlot <- ggplot(namedData, aes(x = scaleSPL, y = logSA, 
+indPlot <- ggplot(namedData, aes(x = logSPL, y = logSA, 
                                color = significant)) +
-  geom_line(data = SA_preds_sum, aes(x = scaleSPL, y = .epred,
+  geom_line(data = SA_preds_sum, aes(x = logSPL, y = .epred,
                                          color = significant), linewidth = 0.5) +
   geom_point() +
   facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
@@ -212,7 +217,7 @@ indPlot <- ggplot(namedData, aes(x = scaleSPL, y = logSA,
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
-  labs(x = "Spiracle Length",
+  labs(x = "Spiracle Length (cm)",
        y = "Spiracle Surface Area") +
   theme_classic() +
   theme(axis.text = element_text(size = 6, color = "grey30"),
@@ -222,7 +227,7 @@ indPlot <- ggplot(namedData, aes(x = scaleSPL, y = logSA,
         panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/SPL_SA_individual.png", indPlot,
+ggsave("Results/Figures/FigureS2.png", indPlot,
        width = 8.5, height = 11)
 ```
 
@@ -351,5 +356,5 @@ labelPlot <- spPlot +
 
 labelPlot
 
-ggsave("Results/Figures/SPL_SA.png", labelPlot, width = 10, height = 10)
+ggsave("Results/Figures/Figure4.png", labelPlot, width = 10, height = 10)
 ```

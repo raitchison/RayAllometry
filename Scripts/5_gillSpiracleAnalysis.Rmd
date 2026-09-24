@@ -151,7 +151,7 @@ propulsionPlot <- ggplot(propulsion_slopes,
   stat_halfeye(.width = c(0.95), point_interval = mean_qi) +
   scale_fill_manual(values = c("Pectoral Oscillation" = "#f68362",
                                "Pectoral Undulation" = "#545e82",
-                               "Caudal Propulsion" = "#B7D3F2")) +
+                               "Caudal Propulsion" = "#9cc3ed")) +
   scale_x_continuous(breaks = -2:3) +
   labs(x = "",
        y = "") +
@@ -160,9 +160,9 @@ propulsionPlot <- ggplot(propulsion_slopes,
   annotate("text", x = 1.21, y = 2.95, label = "1.21", 
            size = 4, color = "#f68362") +
   annotate("text", x = -1, y = 2.4, label = "Caudal Propulsion", 
-           size = 5, color = "#B7D3F2") +
+           size = 5, color = "#9cc3ed") +
   annotate("text", x = 0.85, y = 1.95, label = "0.85", 
-           size = 4, color = "#B7D3F2") +
+           size = 4, color = "#9cc3ed") +
     annotate("text", x = -1, y = 1.4, label = "Pectoral Undulation", 
            size = 5, color = "#545e82") +
   annotate("text", x = 0.84, y = 0.95, label = "0.84", 
@@ -170,7 +170,7 @@ propulsionPlot <- ggplot(propulsion_slopes,
   add_phylopic(x = -1, y = 3.7, img = osc, height = 0.4,
                fill = "#f68362") +
   add_phylopic(x = -1, y = 2.65, img = caud, height = 0.3,
-               fill = "#B7D3F2") +
+               fill = "#9cc3ed") +
   add_phylopic(x = -1, y = 1.65, img = und, height = 0.3,
                fill = "#545e82") +
   theme_classic() +
@@ -181,6 +181,6 @@ propulsionPlot <- ggplot(propulsion_slopes,
 
 propulsionPlot
 
-ggsave("Results/Figures/GSH_SPL.png", propulsionPlot,
-       width = 8, height = 10)
+ggsave("Results/Figures/Figure7.png", propulsionPlot,
+       width = 8, height = 9)
 ```

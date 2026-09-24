@@ -46,6 +46,21 @@ write.csv(raySum, "Data/Data_Processed/SpeciesSummary.csv",
           row.names = FALSE)
 ```
 
+```{r}
+raySumSex <- logData %>%
+  group_by(Genus_species, Sex) %>%
+  summarise(
+    N = n(),
+    Family = first(Family), 
+    Order = first(Order)) %>%
+  mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
+  select(Order, Family, Genus_species, , Sex, N) %>%
+  arrange(Order, Family, Genus_species, Sex, N)
+
+write.csv(raySum, "Data/Data_Processed/SpeciesSummary.csv",
+          row.names = FALSE)
+```
+
 Mean per species
 
 ```{r}

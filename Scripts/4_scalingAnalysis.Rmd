@@ -246,9 +246,6 @@ TL_SPL_coef <- ggplot(TL_SPL_sorted,
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
-
-ggsave("Results/Figures/TL_SPL_coef .png", TL_SPL_coef ,
-       width = 8, height = 10)
 ```
 
 ### 6.1.2 GSH
@@ -325,8 +322,19 @@ TL_GSH_coef <- ggplot(TL_GSH_sorted,
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
+```
 
-ggsave("Results/Figures/TL_GSH_coef.png", TL_GSH_coef,
+Combine plots
+
+```{r}
+TLplots <- plot_grid(TL_SPL_coef, TL_GSH_coef,
+                     align = "h",
+                     labels = c("a", "b"),
+                      label_size = 10)
+
+TLplots
+
+ggsave("Results/Figures/Figure5.png", TLplots,
        width = 8, height = 10)
 ```
 
@@ -426,9 +434,6 @@ DW_SPL_coef <- ggplot(DW_SPL_sorted,
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
-
-ggsave("Results/Figures/DW_SPL_coef.png", DW_SPL_coef,
-       width = 8, height = 10)
 ```
 
 ### 6.2.2 GSH
@@ -505,16 +510,32 @@ DW_GSH_coef <- ggplot(DW_GSH_sorted,
   theme_classic() +
   theme(axis.text.y = element_text(size = 8, face = "italic"),
         legend.position = "none")
+```
 
-ggsave("Results/Figures/DW_GSH_coef.png", DW_GSH_coef,
+Combine plots
+
+```{r}
+DWplots <- plot_grid(DW_SPL_coef, DW_GSH_coef,
+                     align = "h",
+                     labels = c("a", "b"),
+                      label_size = 10)
+
+DWplots
+
+ggsave("Results/Figures/Figure6.png", DWplots,
        width = 8, height = 10)
 ```
 
-# Supplementary Figures
+## Supplementary Figures ##
 
 Plot individual species original data with brms model fit
 
 TL species
+
+```{r}
+# Get the global mean used for centering
+TL_mean <- mean(TLscaled$logTL)
+```
 
 SPL
 
@@ -538,14 +559,16 @@ TLnamed <- TLnamed %>%
 TL_SPL_pred <- TLscaled %>%
   group_by(Genus_species) %>%
   summarise(
-    min_x = min(scaleTL, na.rm = TRUE),
-    max_x = max(scaleTL, na.rm = TRUE),
+    min_x = min(logTL, na.rm = TRUE),
+    max_x = max(logTL, na.rm = TRUE),
     .groups = "drop") %>%
-  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
-                         max(TLscaled$scaleTL, na.rm = TRUE),
-                         length.out = 100)) %>%
-  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
-  select(Genus_species, scaleTL)
+  crossing(logTL = seq(min(TLscaled$logTL, na.rm = TRUE),
+                        max(TLscaled$logTL, na.rm = TRUE),
+                        length.out = 100)) %>%
+  filter(logTL >= min_x, logTL <= max_x) %>%
+  # Recreate scaleTL by centering so it can be "found"
+  mutate(scaleTL = logTL - TL_mean) %>%
+  select(Genus_species, logTL, scaleTL)
 
 # Draw from the posterior
 TL_SPL_preds <- TL_SPL %>%
@@ -554,7 +577,7 @@ TL_SPL_preds <- TL_SPL %>%
 
 # Summarize
 TL_SPL_preds_sum <- TL_SPL_preds %>%
-  group_by(Genus_species, scaleTL) %>%
+  group_by(Genus_species, logTL) %>%
   median_qi(.epred, .width = 0.95) %>%
   mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
   # Left join significance
@@ -562,9 +585,24 @@ TL_SPL_preds_sum <- TL_SPL_preds %>%
 ```
 
 ```{r}
-TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL, 
+# Make a prediction grid
+TL_SPL_pred <- TLscaled %>%
+  group_by(Genus_species) %>%
+  summarise(
+    min_x = min(scaleTL, na.rm = TRUE),
+    max_x = max(scaleTL, na.rm = TRUE),
+    .groups = "drop") %>%
+  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
+                         max(TLscaled$scaleTL, na.rm = TRUE),
+                         length.out = 100)) %>%
+  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
+  select(Genus_species, scaleTL)
+```
+
+```{r}
+TL_SPL_species <- ggplot(TLnamed, aes(x = logTL, y = logSPL_TL, 
                                       color = significant)) +
-  geom_line(data = TL_SPL_preds_sum, aes(x = scaleTL, y = .epred,
+  geom_line(data = TL_SPL_preds_sum, aes(x = logTL, y = .epred,
                                          color = significant), linewidth = 0.5) +
   geom_point() +
   facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
@@ -574,7 +612,7 @@ TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL,
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
-  labs(x = "Total Length",
+  labs(x = "Total Length (cm)",
        y = "Relative Spiracle Length") +
   theme_classic() +
   theme(axis.text = element_text(size = 6, color = "grey30"),
@@ -584,7 +622,7 @@ TL_SPL_species <- ggplot(TLnamed, aes(x = scaleTL, y = logSPL_TL,
         panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/TL_SPL.png", TL_SPL_species,
+ggsave("Results/Figures/FigureS3.png", TL_SPL_species,
        width = 8.5, height = 11)
 ```
 
@@ -610,14 +648,16 @@ TLnamed <- TLnamed %>%
 TL_GSH_pred <- TLscaled %>%
   group_by(Genus_species) %>%
   summarise(
-    min_x = min(scaleTL, na.rm = TRUE),
-    max_x = max(scaleTL, na.rm = TRUE),
+    min_x = min(logTL, na.rm = TRUE),
+    max_x = max(logTL, na.rm = TRUE),
     .groups = "drop") %>%
-  crossing(scaleTL = seq(min(TLscaled$scaleTL, na.rm = TRUE),
-                         max(TLscaled$scaleTL, na.rm = TRUE),
-                         length.out = 100)) %>%
-  filter(scaleTL >= min_x, scaleTL <= max_x) %>%
-  select(Genus_species, scaleTL)
+  crossing(logTL = seq(min(TLscaled$logTL, na.rm = TRUE),
+                        max(TLscaled$logTL, na.rm = TRUE),
+                        length.out = 100)) %>%
+  filter(logTL >= min_x, logTL <= max_x) %>%
+  # Recreate scaleTL by centering so it can be "found"
+  mutate(scaleTL = logTL - TL_mean) %>%
+  select(Genus_species, logTL, scaleTL)
 
 # Draw from the posterior
 TL_GSH_preds <- TL_GSH %>%
@@ -626,7 +666,7 @@ TL_GSH_preds <- TL_GSH %>%
 
 # Summarize
 TL_GSH_preds_sum <- TL_GSH_preds %>%
-  group_by(Genus_species, scaleTL) %>%
+  group_by(Genus_species, logTL) %>%
   median_qi(.epred, .width = 0.95) %>%
   mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
   # Left join significance
@@ -634,9 +674,9 @@ TL_GSH_preds_sum <- TL_GSH_preds %>%
 ```
 
 ```{r}
-TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL, 
+TL_GSH_species <- ggplot(TLnamed, aes(x = logTL, y = logGSH_TL, 
                                       color = significant)) +
-  geom_line(data = TL_GSH_preds_sum, aes(x = scaleTL, y = .epred,
+  geom_line(data = TL_GSH_preds_sum, aes(x = logTL, y = .epred,
                                          color = significant), linewidth = 0.5) +
   geom_point() +
   facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
@@ -646,7 +686,7 @@ TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL,
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
-  labs(x = "Total Length",
+  labs(x = "Total Length (cm)",
        y = "Relative Gill Slit Height") +
   theme_classic() +
   theme(axis.text = element_text(size = 6, color = "grey30"),
@@ -656,11 +696,16 @@ TL_GSH_species <- ggplot(TLnamed, aes(x = scaleTL, y = logGSH_TL,
         panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/TL_GSH.png", TL_GSH_species,
+ggsave("Results/Figures/FigureS4.png", TL_GSH_species,
        width = 8.5, height = 11)
 ```
 
 DW species
+
+```{r}
+# Get the global mean used for centering
+DW_mean <- mean(DWscaled$logDW)
+```
 
 SPL
 
@@ -684,14 +729,16 @@ DWnamed <- DWnamed %>%
 DW_SPL_pred <- DWscaled %>%
   group_by(Genus_species) %>%
   summarise(
-    min_x = min(scaleDW, na.rm = TRUE),
-    max_x = max(scaleDW, na.rm = TRUE),
+    min_x = min(logDW, na.rm = TRUE),
+    max_x = max(logDW, na.rm = TRUE),
     .groups = "drop") %>%
-  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
-                         max(DWscaled$scaleDW, na.rm = TRUE),
-                         length.out = 100)) %>%
-  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
-  select(Genus_species, scaleDW)
+  crossing(logDW = seq(min(DWscaled$logDW, na.rm = TRUE),
+                        max(DWscaled$logDW, na.rm = TRUE),
+                        length.out = 100)) %>%
+  filter(logDW >= min_x, logDW <= max_x) %>%
+  # Recreate scaleDW by centering so it can be "found"
+  mutate(scaleDW = logDW - DW_mean) %>%
+  select(Genus_species, logDW, scaleDW)
 
 # Draw from the posterior
 DW_SPL_preds <- DW_SPL %>%
@@ -700,7 +747,7 @@ DW_SPL_preds <- DW_SPL %>%
 
 # Summarize
 DW_SPL_preds_sum <- DW_SPL_preds %>%
-  group_by(Genus_species, scaleDW) %>%
+  group_by(Genus_species, logDW) %>%
   median_qi(.epred, .width = 0.95) %>%
   mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
   # Left join significance
@@ -708,9 +755,9 @@ DW_SPL_preds_sum <- DW_SPL_preds %>%
 ```
 
 ```{r}
-DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW, 
+DW_SPL_species <- ggplot(DWnamed, aes(x = logDW, y = logSPL_DW, 
                                       color = significant)) +
-  geom_line(data = DW_SPL_preds_sum, aes(x = scaleDW, y = .epred,
+  geom_line(data = DW_SPL_preds_sum, aes(x = logDW, y = .epred,
                                          color = significant), linewidth = 0.5) +
   geom_point() +
   facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
@@ -720,7 +767,7 @@ DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW,
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
-  labs(x = "Disc Width",
+  labs(x = "Disc Width (cm)",
        y = "Relative Spiracle Length") +
   theme_classic() +
   theme(axis.text = element_text(size = 6, color = "grey30"),
@@ -730,8 +777,8 @@ DW_SPL_species <- ggplot(DWnamed, aes(x = scaleDW, y = logSPL_DW,
         panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/DW_SPL.png", DW_SPL_species,
-       width = 8.5, height = 11)
+ggsave("Results/Figures/FigureS5.png", DW_SPL_species,
+       width = 8.5, height = 4.5)
 ```
 
 GSH
@@ -756,14 +803,16 @@ DWnamed <- DWnamed %>%
 DW_GSH_pred <- DWscaled %>%
   group_by(Genus_species) %>%
   summarise(
-    min_x = min(scaleDW, na.rm = TRUE),
-    max_x = max(scaleDW, na.rm = TRUE),
+    min_x = min(logDW, na.rm = TRUE),
+    max_x = max(logDW, na.rm = TRUE),
     .groups = "drop") %>%
-  crossing(scaleDW = seq(min(DWscaled$scaleDW, na.rm = TRUE),
-                         max(DWscaled$scaleDW, na.rm = TRUE),
-                         length.out = 100)) %>%
-  filter(scaleDW >= min_x, scaleDW <= max_x) %>%
-  select(Genus_species, scaleDW)
+  crossing(logDW = seq(min(DWscaled$logDW, na.rm = TRUE),
+                        max(DWscaled$logDW, na.rm = TRUE),
+                        length.out = 100)) %>%
+  filter(logDW >= min_x, logDW <= max_x) %>%
+  # Recreate scaleDW by centering so it can be "found"
+  mutate(scaleDW = logDW - DW_mean) %>%
+  select(Genus_species, logDW, scaleDW)
 
 # Draw from the posterior
 DW_GSH_preds <- DW_GSH %>%
@@ -772,7 +821,7 @@ DW_GSH_preds <- DW_GSH %>%
 
 # Summarize
 DW_GSH_preds_sum <- DW_GSH_preds %>%
-  group_by(Genus_species, scaleDW) %>%
+  group_by(Genus_species, logDW) %>%
   median_qi(.epred, .width = 0.95) %>%
   mutate(Genus_species = str_replace_all(Genus_species, "_", " ")) %>%
   # Left join significance
@@ -780,9 +829,9 @@ DW_GSH_preds_sum <- DW_GSH_preds %>%
 ```
 
 ```{r}
-DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW, 
+DW_GSH_species <- ggplot(DWnamed, aes(x = logDW, y = logGSH_DW, 
                                       color = significant)) +
-  geom_line(data = DW_GSH_preds_sum, aes(x = scaleDW, y = .epred,
+  geom_line(data = DW_GSH_preds_sum, aes(x = logDW, y = .epred,
                                          color = significant), linewidth = 0.5) +
   geom_point() +
   facet_wrap(~ Genus_species, scales = "free_x", ncol = 5) +
@@ -792,7 +841,7 @@ DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW,
   scale_color_manual(values = c("Above" = "#008080",
                                 "Equal" = "grey80",
                                 "Below" = "#ca562c")) +
-  labs(x = "Disc Width",
+  labs(x = "Disc Width (cm)",
        y = "Relative Gill Slit Height") +
   theme_classic() +
   theme(axis.text = element_text(size = 6, color = "grey30"),
@@ -802,6 +851,6 @@ DW_GSH_species <- ggplot(DWnamed, aes(x = scaleDW, y = logGSH_DW,
         panel.spacing.x = unit(1, "lines"),
         legend.position = "none")
 
-ggsave("Results/Figures/DW_GSH.png", DW_GSH_species,
-       width = 8.5, height = 11)
+ggsave("Results/Figures/FigureS6.png", DW_GSH_species,
+       width = 8.5, height = 4.5)
 ```
