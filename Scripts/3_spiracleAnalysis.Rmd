@@ -323,6 +323,7 @@ spPlot <- ggplot(data = scaledData, aes(x = scaleSPL, y = logSA, color = Family)
   scale_color_manual(values = family_colors) +
   scale_x_continuous(labels = function(x) format(round(10^x, 1))) +
   scale_y_continuous(labels = function(y) format(round(10^y, 1))) +
+  annotation_logticks(colour = 'grey30') +
   labs(x = "Spiracle Length (cm)",
        y = expression("Spiracle Surface Area (" * cm^2 * ")")) +
   theme_classic() +
