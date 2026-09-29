@@ -12,7 +12,7 @@ library(tidyverse)
 rayData <- read.csv("Data/Data_Processed/RayDataTrimmed.csv")
 ```
 
-Process
+Process.
 
 ```{r}
 logData <- rayData %>%

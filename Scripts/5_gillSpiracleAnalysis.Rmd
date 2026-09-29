@@ -131,6 +131,46 @@ propulsion_summary <- propulsion_slopes %>%
 ```
 
 ```{r}
+# Get the global mean used for centering
+SPL_mean <- mean(scaledData$logSPL)
+```
+
+```{r}
+# Make a prediction grid
+SPL_pred <- scaledData %>%
+  group_by(PropulsionMethod) %>%
+  summarise(
+    min_x = min(logSPL, na.rm = TRUE),
+    max_x = max(logSPL, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  crossing(
+    logSPL = seq(
+      min(scaledData$logSPL, na.rm = TRUE),
+      max(scaledData$logSPL, na.rm = TRUE),
+      length.out = 100
+    )
+  ) %>%
+  filter(logSPL >= min_x, logSPL <= max_x) %>%
+  mutate(
+    scaleSPL = logSPL - SPL_mean
+  ) %>%
+  select(PropulsionMethod, logSPL, scaleSPL)
+
+# Draw from the posterior
+SPL_preds <- model %>%
+  add_epred_draws(
+    newdata = SPL_pred,
+    re_formula = NA
+  )
+
+# Summarize
+model_preds_sum <- SPL_preds %>%
+  group_by(PropulsionMethod, logSPL) %>%
+  median_qi(.epred, .width = 0.95)
+```
+
+```{r}
 # Get phylopic images
 caud <- get_phylopic(uuid = "68a96e12-78b2-4b38-a532-1bdfa05a07bc")
 osc <- get_phylopic(uuid = "ebdc09b9-659e-40e7-9323-1ac53d650aa3") %>%
@@ -139,6 +179,42 @@ und <- get_phylopic(uuid = "0596f8ce-e9a5-4481-9982-ad7599fc2cba") %>%
   rotate_phylopic(angle = -90)
 ```
 
+```{r}
+propulsionScatter <- ggplot(scaledData, 
+                         aes(x = logSPL, 
+                             y = logGSH,
+                       color = PropulsionMethod)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_line(data = model_preds_sum, aes(x = logSPL, y = .epred, 
+                                            group = PropulsionMethod), linewidth = 0.5) +
+  scale_color_manual(values = c("Pectoral Oscillation" = "#f68362",
+                               "Pectoral Undulation" = "#545e82",
+                               "Caudal Propulsion" = "#9cc3ed")) +
+  scale_x_continuous(labels = function(x) format(round(10^x, 1))) +
+  scale_y_continuous(labels = function(y) format(round(10^y, 1))) +
+  annotation_logticks(colour = 'grey30') +
+  labs(x = "Spiracle Length (mm)",
+       y = "Gill Slit Height (mm)") +
+  annotate("text", x = 1.7, y = 0.6, label = "Pectoral Oscillation", 
+           size = 4, color = "#f68362") +
+  annotate("text", x = 0.35, y = 0.7, label = "Caudal Propulsion", 
+           size = 4, color = "#9cc3ed") +
+    annotate("text", x = 0.65, y = 0.1, label = "Pectoral Undulation", 
+           size = 4, color = "#545e82") +
+  add_phylopic(x = 1.7, y = 0.75, img = osc, height = 0.2,
+               fill = "#f68362") +
+  add_phylopic(x = 0.35, y = 0.77, img = caud, height = 0.1,
+               fill = "#9cc3ed") +
+  add_phylopic(x = 0.65, y = 0.17, img = und, height = 0.1,
+               fill = "#545e82") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+propulsionScatter
+
+ggsave("Results/Figures/Figure7.png", propulsionScatter,
+       width = 8, height = 9)
+```
 
 ```{r}
 propulsionPlot <- ggplot(propulsion_slopes, 
@@ -181,6 +257,6 @@ propulsionPlot <- ggplot(propulsion_slopes,
 
 propulsionPlot
 
-ggsave("Results/Figures/Figure7.png", propulsionPlot,
+ggsave("Results/Figures/Figure8.png", propulsionPlot,
        width = 8, height = 9)
 ```
